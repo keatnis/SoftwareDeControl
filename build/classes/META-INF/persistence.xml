@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence version="2.2" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence           http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
+  <persistence-unit name="ControlSystemPU" transaction-type="RESOURCE_LOCAL">
+    <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
+    <class>com.model.Usuario</class>
+    <class>com.model.ContactoEmergencia</class>
+    <class>com.model.Flete</class>
+    <class>com.model.Vehiculo</class>
+    <class>com.model.AsignacionUnidad</class>
+    <class>com.model.CalcularSueldo</class>
+    <class>com.model.LugarTrab</class>
+    <class>com.model.Operador</class>
+    <class>com.model.Servicio</class>
+    <class>com.model.RecargaCombustible</class>
+    <class>com.model.User</class>
+    <class>com.model.Nomina</class>
+    <class>com.model.Workplace</class>
+    <class>com.model.DetalleCombustible</class>
+    <class>com.model.NewEntity</class>
+    <class>com.model.HistorialTrabajador</class>
+    <class>com.model.Prestamo</class>
+    <class>com.model.Job</class>
+    <properties>
+      <property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/controlSystem?useSSL=false"/>
+      <property name="javax.persistence.jdbc.user" value="root"/>
+      <property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+      <property name="javax.persistence.jdbc.password" value=";5-X=j7eUwVz"/>
+      <property name="hibernate.hbm2ddl.auto" value="update"/>
+    </properties>
+  </persistence-unit>
+</persistence>
