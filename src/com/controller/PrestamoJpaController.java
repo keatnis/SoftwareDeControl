@@ -1,19 +1,18 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.controller;
 
 import com.controller.exceptions.NonexistentEntityException;
 import com.model.Prestamo;
+import com.model.User;
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
+import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -21,8 +20,8 @@ import javax.persistence.criteria.Root;
  */
 public class PrestamoJpaController implements Serializable {
 
-    public PrestamoJpaController(EntityManagerFactory emf) {
-        this.emf = emf;
+    public PrestamoJpaController() {
+        this.emf = Persistence.createEntityManagerFactory("ControlSystemPU");
     }
     private EntityManagerFactory emf = null;
 
@@ -37,6 +36,7 @@ public class PrestamoJpaController implements Serializable {
             em.getTransaction().begin();
             em.persist(prestamo);
             em.getTransaction().commit();
+            JOptionPane.showMessageDialog(null, "prestamo registrado");
         } finally {
             if (em != null) {
                 em.close();
@@ -51,10 +51,11 @@ public class PrestamoJpaController implements Serializable {
             em.getTransaction().begin();
             prestamo = em.merge(prestamo);
             em.getTransaction().commit();
+            JOptionPane.showMessageDialog(null, "prestamo editado");
         } catch (Exception ex) {
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
-                Long id = prestamo.getId();
+                int id = prestamo.getId();
                 if (findPrestamo(id) == null) {
                     throw new NonexistentEntityException("The prestamo with id " + id + " no longer exists.");
                 }
@@ -67,7 +68,7 @@ public class PrestamoJpaController implements Serializable {
         }
     }
 
-    public void destroy(Long id) throws NonexistentEntityException {
+    public void destroy(int id) throws NonexistentEntityException {
         EntityManager em = null;
         try {
             em = getEntityManager();
@@ -81,6 +82,7 @@ public class PrestamoJpaController implements Serializable {
             }
             em.remove(prestamo);
             em.getTransaction().commit();
+            JOptionPane.showMessageDialog(null, "prestamo eliminado");
         } finally {
             if (em != null) {
                 em.close();
@@ -112,7 +114,7 @@ public class PrestamoJpaController implements Serializable {
         }
     }
 
-    public Prestamo findPrestamo(Long id) {
+    public Prestamo findPrestamo(int id) {
         EntityManager em = getEntityManager();
         try {
             return em.find(Prestamo.class, id);
@@ -133,5 +135,31 @@ public class PrestamoJpaController implements Serializable {
             em.close();
         }
     }
-    
+
+    public boolean existRegPrestamo(Integer id) {
+        String query = "select count(ID) from PRESTAMO  where ID=" + id;
+        final EntityManager em = getEntityManager();
+        // you will always get a single result
+        Long count = (Long) em.createNativeQuery(query).getSingleResult();
+        return ((count.equals(0L)) ? false : true);
+    }
+
+    public List<Prestamo> findByIdOperador(int idOperador) {
+        EntityManager em = getEntityManager();
+        String query = "SELECT * from PRESTAMO p WHERE p.operador_id =: idOperador";
+        List<Prestamo> userList = em.createNamedQuery(query)
+                .setParameter("idOperador", idOperador).getResultList();
+
+        return userList;
+    }
+
+    public List<Prestamo> findBetweenDates(int idOperador, String startDate, String endDate) {
+        //System.out.println("datos enciados "+idOperador+' '+startDate+' '+endDate);
+        EntityManager em = getEntityManager();
+        String query = "SELECT * FROM PRESTAMO p WHERE  p.fecha_prestamo BETWEEN '"+startDate+"' AND  '"+endDate+"' AND p.operador_id='"+idOperador+"'";
+        List<Prestamo> userList = em.createNativeQuery(query,Prestamo.class)
+                        .getResultList();
+
+        return userList;
+    }
 }

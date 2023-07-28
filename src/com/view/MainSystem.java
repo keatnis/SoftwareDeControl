@@ -1,27 +1,22 @@
 package com.view;
-import com.utils.icon.CalcularNomina;
+
+import com.model.User;
 import java.awt.BorderLayout;
 import java.awt.Component;
 
-
 import javax.swing.JOptionPane;
 
-
 public class MainSystem extends javax.swing.JFrame {
-    private Login splashFrame;
 
+    private Login splashFrame;
+    private User user;
     public MainSystem() {
 
         initComponents();
-        MenuBar.setVisible(false);
-     //   this.showForm(new Dashboard(), "Dashboard");
-    
-//        this.showForm(new Dasboard(), "Dasboard");
 
     }
 
-
-    MainSystem(String  user, Login splashFrame) {
+    MainSystem(User user, Login splashFrame) {
         this.splashFrame = splashFrame;
         setProgress(0, "Cargando componentes del Sistema");
         initComponents();
@@ -30,15 +25,28 @@ public class MainSystem extends javax.swing.JFrame {
         this.showForm(new Dashboard(), "Dashboard");
         setProgress(65, "Cargando interfaces");
         // this.setShape(new RoundRectangle2D.Double(0, 0, getWidth(),getHeight(), 20, 20));
-     
-        lbUser.setText("Usuario: "+user);
+        this.user=user;
+        lbUser.setText(user.getRole()+" :" + user.getNombre());
         this.repaint();
+
         setProgress(65, "Cargando interfaces");
         setProgress(100, "Carga completa");
-//        initn();
+        accesByTypeUSer();
+        this.getAccessibleContext();
+//     initn();
+
     }
-
-
+    private void accesByTypeUSer(){
+        if (user.getRole().equals("Admin")) {
+                this.getAccessibleContext();
+        }else{
+            /*
+            lOS MODULOS NO ACCESIBLES PARA EL USUARIO NORMAL
+            */
+            menuUsuario.setEnabled(false);
+            this.getAccessibleContext();
+        }
+    }
     private void setProgress(int percent, String information) {
         splashFrame.getlbprogress().setText(information);
         splashFrame.getProgressBar().setValue(percent);
@@ -49,7 +57,6 @@ public class MainSystem extends javax.swing.JFrame {
         }
     }
 
-
     public void showForm(Component form, String title) {
         lbTitle.setText(title);
         panelBody.removeAll();
@@ -58,7 +65,6 @@ public class MainSystem extends javax.swing.JFrame {
         panelBody.revalidate();
     }
 
- 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -86,13 +92,12 @@ public class MainSystem extends javax.swing.JFrame {
         historialServicio = new javax.swing.JMenuItem();
         programarServicio = new javax.swing.JMenuItem();
         jMenu1 = new javax.swing.JMenu();
-        jMenuItem4 = new javax.swing.JMenuItem();
-        jMenuItem6 = new javax.swing.JMenuItem();
+        menuPrestamo = new javax.swing.JMenuItem();
         menuCalculoNomina = new javax.swing.JMenuItem();
         menuPersonal = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem3 = new javax.swing.JMenuItem();
-        incidencias = new javax.swing.JMenu();
+        menuUsuario = new javax.swing.JMenu();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         jMenuItem2 = new javax.swing.JMenuItem();
 
@@ -174,6 +179,11 @@ public class MainSystem extends javax.swing.JFrame {
         MenuBar.setFont(new java.awt.Font("Segoe UI", 0, 14)); // NOI18N
         MenuBar.setMaximumSize(new java.awt.Dimension(1054, 32769));
         MenuBar.setPreferredSize(new java.awt.Dimension(903, 28));
+        MenuBar.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                MenuBarMouseClicked(evt);
+            }
+        });
 
         Dasboard.setIcon(new javax.swing.ImageIcon(getClass().getResource("/com/utils/icon/dashboard.png"))); // NOI18N
         Dasboard.setFont(new java.awt.Font("Segoe UI", 0, 15)); // NOI18N
@@ -259,11 +269,13 @@ public class MainSystem extends javax.swing.JFrame {
 
         jMenu1.setText("Nomina");
 
-        jMenuItem4.setText("Registrar prestamos");
-        jMenu1.add(jMenuItem4);
-
-        jMenuItem6.setText("Descuentos/ Horas Extras");
-        jMenu1.add(jMenuItem6);
+        menuPrestamo.setText("Registrar prestamos");
+        menuPrestamo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuPrestamoActionPerformed(evt);
+            }
+        });
+        jMenu1.add(menuPrestamo);
 
         menuCalculoNomina.setText("Calcular nómina");
         menuCalculoNomina.addActionListener(new java.awt.event.ActionListener() {
@@ -295,14 +307,14 @@ public class MainSystem extends javax.swing.JFrame {
 
         MenuBar.add(menuPersonal);
 
-        incidencias.setText("Usuarios");
-        incidencias.setFocusPainted(true);
-        incidencias.addActionListener(new java.awt.event.ActionListener() {
+        menuUsuario.setText("Usuarios");
+        menuUsuario.setFocusPainted(true);
+        menuUsuario.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                incidenciasActionPerformed(evt);
+                menuUsuarioActionPerformed(evt);
             }
         });
-        incidencias.add(jSeparator2);
+        menuUsuario.add(jSeparator2);
 
         jMenuItem2.setText("Registrar Usuario");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
@@ -310,9 +322,9 @@ public class MainSystem extends javax.swing.JFrame {
                 jMenuItem2ActionPerformed(evt);
             }
         });
-        incidencias.add(jMenuItem2);
+        menuUsuario.add(jMenuItem2);
 
-        MenuBar.add(incidencias);
+        MenuBar.add(menuUsuario);
 
         setJMenuBar(MenuBar);
 
@@ -347,7 +359,7 @@ public class MainSystem extends javax.swing.JFrame {
     private void DasboardMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_DasboardMouseClicked
         // TODO add your handling code here:
         this.showForm(new Dashboard(), "Dashboard");
-       
+
     }//GEN-LAST:event_DasboardMouseClicked
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
@@ -367,23 +379,23 @@ public class MainSystem extends javax.swing.JFrame {
     }//GEN-LAST:event_CerrarSesionActionPerformed
 
     private void cambiarContraseñaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cambiarContraseñaActionPerformed
- 
+
     }//GEN-LAST:event_cambiarContraseñaActionPerformed
 
     private void cambiarAvatarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cambiarAvatarActionPerformed
-       // this.showForm(new UserView(), "Lista de Personal");
+        // this.showForm(new UserView(), "Lista de Personal");
     }//GEN-LAST:event_cambiarAvatarActionPerformed
 
-    private void incidenciasActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_incidenciasActionPerformed
-        
-    }//GEN-LAST:event_incidenciasActionPerformed
+    private void menuUsuarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuUsuarioActionPerformed
+
+    }//GEN-LAST:event_menuUsuarioActionPerformed
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-       this.showForm(new UserView(), "Usuarios");
+        this.showForm(new UserView(), "Usuarios");
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void DasboardActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_DasboardActionPerformed
-     
+
     }//GEN-LAST:event_DasboardActionPerformed
 
     private void menuAddVehiculoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuAddVehiculoActionPerformed
@@ -391,7 +403,7 @@ public class MainSystem extends javax.swing.JFrame {
     }//GEN-LAST:event_menuAddVehiculoActionPerformed
 
     private void registrarServicioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_registrarServicioActionPerformed
-       this.showForm(new Servicios(), "Menu: Servicios");
+        this.showForm(new Servicios(), "Menu: Servicios");
     }//GEN-LAST:event_registrarServicioActionPerformed
 
     private void programarServicioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_programarServicioActionPerformed
@@ -403,7 +415,7 @@ public class MainSystem extends javax.swing.JFrame {
     }//GEN-LAST:event_historialServicioActionPerformed
 
     private void menuWorkplaceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuWorkplaceActionPerformed
-       this.showForm(new LugarTrabajo(), "Menú : Flete > Lugar de Trabajo");
+        this.showForm(new LugarTrabajo(), "Menú : Flete > Lugar de Trabajo");
     }//GEN-LAST:event_menuWorkplaceActionPerformed
 
     private void recargaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_recargaActionPerformed
@@ -418,12 +430,27 @@ public class MainSystem extends javax.swing.JFrame {
     }//GEN-LAST:event_recargaActionPerformed
 
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
-    this.showForm(new FleteView(), "Flete > Registro de flete");
+        this.showForm(new FleteView(), "Flete > Registro de flete");
     }//GEN-LAST:event_jMenuItem5ActionPerformed
 
     private void menuCalculoNominaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCalculoNominaActionPerformed
         this.showForm(new CalcularNomina(), "Nomina");
     }//GEN-LAST:event_menuCalculoNominaActionPerformed
+
+    private void MenuBarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuBarMouseClicked
+        this.getAccessibleContext();
+    }//GEN-LAST:event_MenuBarMouseClicked
+
+    private void menuPrestamoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuPrestamoActionPerformed
+        PrestamoView dialog = new PrestamoView(new javax.swing.JFrame(), true);
+        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+            dialog.dispose();
+            }
+        });
+        dialog.setVisible(true);
+    }//GEN-LAST:event_menuPrestamoActionPerformed
 
 //    public static void main(ModelUsers user) {
 //        java.awt.EventQueue.invokeLater(new Runnable() {
@@ -450,7 +477,6 @@ public class MainSystem extends javax.swing.JFrame {
     private javax.swing.JMenuItem cambiarAvatar;
     private javax.swing.JMenuItem cambiarContraseña;
     private javax.swing.JMenuItem historialServicio;
-    private javax.swing.JMenu incidencias;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
@@ -458,9 +484,7 @@ public class MainSystem extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
-    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
-    private javax.swing.JMenuItem jMenuItem6;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     public javax.swing.JLabel lbTitle;
@@ -468,6 +492,8 @@ public class MainSystem extends javax.swing.JFrame {
     private javax.swing.JMenuItem menuAddVehiculo;
     private javax.swing.JMenuItem menuCalculoNomina;
     private javax.swing.JMenu menuPersonal;
+    private javax.swing.JMenuItem menuPrestamo;
+    private javax.swing.JMenu menuUsuario;
     private javax.swing.JMenuItem menuWorkplace;
     public javax.swing.JPanel panelBody;
     private javax.swing.JPanel panelEnc;

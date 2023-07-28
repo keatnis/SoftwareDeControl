@@ -15,7 +15,7 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.swing.JOptionPane;
-import org.eclipse.persistence.sessions.remote.corba.sun._CORBARemoteSessionControllerImplBase;
+
 
 /**
  *

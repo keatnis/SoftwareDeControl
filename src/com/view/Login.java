@@ -25,20 +25,20 @@ public class Login extends javax.swing.JFrame {
      * Login form create thread for the mainSystem use hash for encrypted the
      * password
      */
-      Hash hash;
+    Hash hash;
     private Login splashFrame = this;
     public static boolean frameInicio = false;
-    public static boolean btnLog = true;
 
     public Login() {
-        if (!this.isActive()) {
-            initComponents();
-            Image img4 = this.toImage(new ImageIcon(getClass().getResource("/com/utils/icon/icon.jpg")));
-            ImageIcon img3 = new ImageIcon(img4.getScaledInstance(
-                    lbIcon.getWidth(), lbIcon.getHeight(), Image.SCALE_SMOOTH));
-            lbIcon.setIcon(img3);
-            btnLog = true;
-        }
+
+        initComponents();
+        Image img4 = this.toImage(new ImageIcon(getClass().getResource("/com/utils/icon/icon.jpg")));
+        ImageIcon img3 = new ImageIcon(img4.getScaledInstance(
+                lbIcon.getWidth(), lbIcon.getHeight(), Image.SCALE_SMOOTH));
+        lbIcon.setIcon(img3);
+//        this.password.putClientProperty("PasswordField.showRevealButton", true);
+//        this.password.putClientProperty("PasswordField.revealIcon",
+//                new ImageIcon(getClass().getResource("/com/utils/icon/eye.png")));
 
     }
 
@@ -46,7 +46,7 @@ public class Login extends javax.swing.JFrame {
         return ((ImageIcon) icon).getImage();
     }
 
-    private void startThread(String user) {
+    private void startThread(User user) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -57,6 +57,7 @@ public class Login extends javax.swing.JFrame {
                     appFrame.setVisible(true);
                     frameInicio = true;
                     dispose();
+                    // appFrame.addFocusListener();
 
                 } else {
                     appFrame.dispose();
@@ -66,32 +67,30 @@ public class Login extends javax.swing.JFrame {
         thread.start();
     }
 
-    public static void Events() {
-
-    }
-
     private void login() {
 
         UserDao userDao = new UserDao();
 
         String pass = new String(password.getPassword());
         if (!nick.getText().equals("") && !pass.equals("")) {
-             String nuevopass = Hash.getHash(pass,"sha1");
-             String passMD5 = Hash.md5(pass);
+
+            String newPass = hash.sha1(pass);
             List<User> usr = userDao.loginByUser(nick.getText());
-            System.out.println("user db "+usr.get(0).getPassword()  + "encriptado sha1 "+nuevopass +"md5 "+passMD5);
-            if (usr.get(0).getPassword().equals(nuevopass)) {
-                
-                startThread(usr.get(0).getNombre().toString());
-                
-            }else{
-                
+          
+            if (usr.get(0).getPassword().equals(newPass)) {
+
+                startThread(usr.get(0));
+
+            } else if (usr.size() < 0) {
+                JOptionPane.showMessageDialog(this, "usuario no existe en la base de datos");
                 return;
+            } else if (!usr.get(0).getPassword().equals(newPass)) {
+                JOptionPane.showMessageDialog(this, "la contraseña es incorrecta");
             }
-            return;
+            //  return;
             //  startThread();
         } else {
-            JOptionPane.showMessageDialog(null, "Ingrese su usuario y contrseña");
+            JOptionPane.showMessageDialog(this, "Ingrese su usuario y contrseña");
         }
 
     }
@@ -161,11 +160,7 @@ public class Login extends javax.swing.JFrame {
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel1.setText("Iniciar Sesión");
         jPanel1.add(jLabel1);
-
-        nick.setText("admin");
         jPanel1.add(nick);
-
-        password.setText("admin");
         jPanel1.add(password);
 
         btnLogin.setBackground(javax.swing.UIManager.getDefaults().getColor("Button.default.focusColor"));
@@ -242,7 +237,8 @@ public class Login extends javax.swing.JFrame {
 
     private void btnLoginActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnLoginActionPerformed
         login();
-      //  btnLog = false;
+
+        //  btnLog = false;
     }//GEN-LAST:event_btnLoginActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing

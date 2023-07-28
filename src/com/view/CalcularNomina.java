@@ -1,10 +1,14 @@
-package com.utils.icon;
+package com.view;
 
 import com.dao.NominaDAO;
 import com.dao.TrabajadoresDAO;
+import com.model.Nomina;
 import com.model.Operador;
 import com.utils.Filter;
 import com.utils.table.RenderTable;
+import com.view.PrestamoView;
+import java.awt.event.ItemListener;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -20,7 +24,7 @@ public class CalcularNomina extends javax.swing.JPanel {
 
     private TrabajadoresDAO trabajadoresDAO;
     private Operador operador;
-
+    private Nomina nomina;
     private NominaDAO nominaDAO;
 
     public CalcularNomina() {
@@ -28,6 +32,30 @@ public class CalcularNomina extends javax.swing.JPanel {
         this.trabajadoresDAO = new TrabajadoresDAO();
         this.nominaDAO = new NominaDAO();
         this.showForms(false, true);
+    }
+
+    private void save() {
+        nomina = new Nomina();
+        operador = new Operador();
+        String[] idOperador = cmbSearch.getSelectedItem().toString().split(" ");
+        int idoperadorint = Integer.parseInt(idOperador[0]);
+        System.out.println("id operador " + idoperadorint);
+        operador.setId(idoperadorint);
+
+        nomina.setOperador(operador);
+        nomina.setFechaPago(payDate.getDate());
+        SimpleDateFormat formatofecha = new SimpleDateFormat("yyyy-MM-dd");
+        String startDateString = (formatofecha.format(startDate.getDate()));
+        String endDateString = (formatofecha.format(endDate.getDate()));
+
+        nomina.setPeriodo("De " + startDateString + " hasta " + endDateString);
+        nomina.setSueldoDiario(Float.parseFloat(txtSueldoDiario.getText()));
+        nomina.setDiasLaborados(Integer.parseInt(txtDiasLaborales.getText()));
+        nomina.setSueldoNeto(Float.parseFloat(txtTotalSueldoNeto.getText()));
+        nomina.setDescuentos(Float.parseFloat(txtPrestamos.getText()));
+        nomina.setSueldoNeto(Float.parseFloat(txtTotalSueldoNeto.getText()));
+
+        nominaDAO.save(nomina);
     }
 
     private void searchOperador() {
@@ -42,6 +70,7 @@ public class CalcularNomina extends javax.swing.JPanel {
                     + operadorl.getApePaterno() + " " + operadorl.getApeMaterno());
 
         }
+
         this.cmbSearch.setSelectedIndex(0);
         this.cmbSearch.repaint();
         cmbSearch.setPopupVisible(true);
@@ -50,9 +79,13 @@ public class CalcularNomina extends javax.swing.JPanel {
             int id = ve.get(0).getId();
             operador.setId(id);
             txtSueldoDiario.setText(ve.get(0).getJob().getSueldoDiario() + "");
-            lbFechaUltimoPago.setText(nominaDAO.getLastPayDate(id).get(0).getFechaPago() + "");
-        }
+            if (nominaDAO.getLastPayDate(id).get(0).getFechaPago() == null) {
+                lbFechaUltimoPago.setText("No registrado");
+            } else {
+                lbFechaUltimoPago.setText(nominaDAO.getLastPayDate(id).get(0).getFechaPago() + "");
+            }
 
+        }
         this.cmbSearch.addItemListener(new java.awt.event.ItemListener() {
             @Override
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
@@ -64,8 +97,9 @@ public class CalcularNomina extends javax.swing.JPanel {
             }
 
         });
+
     }
-    
+
     public int diasHabiles(Calendar fechaInicial, Calendar fechaFinal, List<Date> listaFechasNoLaborables) {
         int diffDays = 0;
         boolean diaHabil = false;
@@ -101,7 +135,8 @@ public class CalcularNomina extends javax.swing.JPanel {
 
     private void calcularNominaIndividual() {
         List<Date> diasNoTrabajados = new ArrayList<>();
-
+        String[] idOperador = cmbSearch.getSelectedItem().toString().split(" ");
+        int idoperadorint = Integer.parseInt(idOperador[0]);
         int diasLaborados = this.diasHabiles(startDate.getCalendar(),
                 endDate.getCalendar(), diasNoTrabajados);
         txtDiasLaborales.setText("" + diasLaborados);
@@ -110,18 +145,42 @@ public class CalcularNomina extends javax.swing.JPanel {
         float subtotal = diasLaborados * sueldo;
         txtSueldoSub.setText(subtotal + "");
         /*
-            calcular el total incluyendo los prestamos y tiempos extras
+            calcular el total incluyendo los prestamos y tiempos extras durante el periodo seleccionado
          */
-        float prestamos = 0;
-        float extras = 0;
-        txtPrestamos.setText(prestamos + "");
+        SimpleDateFormat formatofecha = new SimpleDateFormat("yyyy-MM-dd");
+        String startDateString = (formatofecha.format(startDate.getDate()));
+        String endDateString = (formatofecha.format(endDate.getDate()));
+        Double prestamos = nominaDAO.getTotalPrestanos(idoperadorint, startDateString, endDateString);
+        // float extras = 0;
+        if (prestamos == null) {
+            prestamos = 0.0;
+        }
+        txtPrestamos.setText(String.format("%.2f", prestamos) + "");
+        txtPrestamos.repaint();
+        float neto = (float) (subtotal + prestamos);
+
+        txtTotalSueldoNeto.setText(String.format("%.2f", neto) + "");
+    }
+
+//    private Double[] calcularNomina() {
+//
+//    }
+
+    private Double gettotalPrestamos(Integer idOperador) {
+        System.out.println("id sd "+idOperador);
+        SimpleDateFormat formatofecha = new SimpleDateFormat("yyyy-MM-dd");
+        String startDateString = (formatofecha.format(startDateALL.getDate()));
+        String endDateString = (formatofecha.format(endDateALL.getDate()));
+      
+        return  nominaDAO.getTotalPrestanos(idOperador, startDateString, endDateString);
     }
 
     private void calcularNominaTodos(JTable table) {
         Filter.removeAllRows(table);
+        List<Date> diasNoTrabajados = new ArrayList<>();
         Object[] titles = new Object[]{
             "ID", "NOMBRE", "A.PATERNO", "A.MATERNO", "PUESTO", "TELEFONO",
-            "SUELDO DIARIO", "TOTAL DIAS LABORALES", "SUBTOTAL", "DESCUENTOS", "PAGO EXTRA", "TOTAL", "FECHA DE PAGO"};
+            "SUELDO DIARIO", "TOTAL DIAS LABORALES", "SUBTOTAL", "DESCUENTOS", "TOTAL", "FECHA DE PAGO"};
         /*coloco el nombre de las  columnas de la tabla USER a el modelo */
         DefaultTableModel model = new DefaultTableModel(null, titles) {
 
@@ -145,12 +204,11 @@ public class CalcularNomina extends javax.swing.JPanel {
                 op.getJob().getPuesto(),
                 op.getTelefono(),
                 op.getJob().getSueldoDiario(),
-                op.getJob().getTotalDiasLaborales(),
-                op.getJob().getSueldoDiario() * op.getJob().getTotalDiasLaborales(),
-                "00",
-                "00",
-                ((op.getJob().getSueldoDiario() * op.getJob().getTotalDiasLaborales())),
-                "2023/08/04"
+                diasHabiles(startDateALL.getCalendar(), endDate.getCalendar(), diasNoTrabajados),
+                op.getJob().getSueldoDiario() * diasHabiles(startDateALL.getCalendar(), endDate.getCalendar(), diasNoTrabajados),
+                gettotalPrestamos(op.getId()),
+                 "",
+                " "
 
             });
             /*establecemos el modelo  al Jtable llamado jTabla*/
@@ -164,7 +222,7 @@ public class CalcularNomina extends javax.swing.JPanel {
         /* asignamos el ancho de cada columna de la tabla*/
 
         int[] anchos = {30, 150, 150, 200, 150, 150, 150, 150, 100, 100, 100,
-            100, 100};
+            100};
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
         }
@@ -187,10 +245,10 @@ public class CalcularNomina extends javax.swing.JPanel {
         tipoNomina = new javax.swing.ButtonGroup();
         root = new javax.swing.JPanel();
         nominaALL = new javax.swing.JPanel();
-        jDateChooser1 = new com.toedter.calendar.JDateChooser();
+        startDateALL = new com.toedter.calendar.JDateChooser();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        jDateChooser2 = new com.toedter.calendar.JDateChooser();
+        endDateALL = new com.toedter.calendar.JDateChooser();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblNomina = new javax.swing.JTable();
         jCheckBox1 = new javax.swing.JCheckBox();
@@ -205,25 +263,22 @@ public class CalcularNomina extends javax.swing.JPanel {
         jLabel8 = new javax.swing.JLabel();
         lbFechaUltimoPago = new javax.swing.JLabel();
         jLabel9 = new javax.swing.JLabel();
-        jLabel10 = new javax.swing.JLabel();
         txtPrestamos = new javax.swing.JTextField();
-        txtExtras = new javax.swing.JTextField();
         jLabel11 = new javax.swing.JLabel();
         txtSueldoSub = new javax.swing.JTextField();
         jLabel12 = new javax.swing.JLabel();
         startDate = new com.toedter.calendar.JDateChooser();
         endDate = new com.toedter.calendar.JDateChooser();
         jLabel13 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        btnRegistro = new javax.swing.JButton();
         jLabel14 = new javax.swing.JLabel();
-        txtTotal = new javax.swing.JTextField();
+        txtTotalSueldoNeto = new javax.swing.JTextField();
         btnCalcular = new javax.swing.JButton();
         jLabel15 = new javax.swing.JLabel();
         payDate = new com.toedter.calendar.JDateChooser();
         btnBuscar = new javax.swing.JButton();
         jSeparator1 = new javax.swing.JSeparator();
         jButton5 = new javax.swing.JButton();
-        jButton6 = new javax.swing.JButton();
         tipo = new javax.swing.JPanel();
         jRadioButton2 = new javax.swing.JRadioButton();
         jRadioButton1 = new javax.swing.JRadioButton();
@@ -265,11 +320,11 @@ public class CalcularNomina extends javax.swing.JPanel {
                 .addGap(18, 18, 18)
                 .addGroup(nominaALLLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jCheckBox1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jDateChooser1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(startDateALL, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(40, 40, 40)
                 .addComponent(jLabel3)
                 .addGap(28, 28, 28)
-                .addComponent(jDateChooser2, javax.swing.GroupLayout.PREFERRED_SIZE, 230, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(endDateALL, javax.swing.GroupLayout.PREFERRED_SIZE, 230, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(31, 31, 31)
                 .addComponent(jButton2)
                 .addGap(317, 317, 317))
@@ -288,9 +343,9 @@ public class CalcularNomina extends javax.swing.JPanel {
                     .addGroup(nominaALLLayout.createSequentialGroup()
                         .addGroup(nominaALLLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
-                            .addComponent(jDateChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(startDateALL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(jLabel3)
-                            .addComponent(jDateChooser2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(endDateALL, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jCheckBox1)))
                 .addContainerGap(469, Short.MAX_VALUE))
@@ -314,11 +369,8 @@ public class CalcularNomina extends javax.swing.JPanel {
 
         lbFechaUltimoPago.setFont(new java.awt.Font("Cantarell", 0, 14)); // NOI18N
         lbFechaUltimoPago.setForeground(new java.awt.Color(255, 102, 51));
-        lbFechaUltimoPago.setText("fecha");
 
         jLabel9.setText("Prestamos");
-
-        jLabel10.setText("Tiempo extra");
 
         txtPrestamos.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -332,11 +384,16 @@ public class CalcularNomina extends javax.swing.JPanel {
 
         jLabel13.setText("Fecha corte");
 
-        jButton1.setText("Guardar registro");
+        btnRegistro.setText("Guardar registro");
+        btnRegistro.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRegistroActionPerformed(evt);
+            }
+        });
 
         jLabel14.setText("Total");
 
-        txtTotal.setForeground(new java.awt.Color(0, 153, 255));
+        txtTotalSueldoNeto.setForeground(new java.awt.Color(0, 153, 255));
 
         btnCalcular.setText("Calcular");
         btnCalcular.addActionListener(new java.awt.event.ActionListener() {
@@ -355,8 +412,11 @@ public class CalcularNomina extends javax.swing.JPanel {
         });
 
         jButton5.setText("ver/añadir");
-
-        jButton6.setText("ver/añadir");
+        jButton5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton5ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout nominaOneLayout = new javax.swing.GroupLayout(nominaOne);
         nominaOne.setLayout(nominaOneLayout);
@@ -388,10 +448,9 @@ public class CalcularNomina extends javax.swing.JPanel {
                         .addGap(122, 122, 122)
                         .addComponent(jLabel13))
                     .addGroup(nominaOneLayout.createSequentialGroup()
-                        .addGap(112, 112, 112)
+                        .addGap(127, 127, 127)
                         .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel9, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jLabel14, javax.swing.GroupLayout.Alignment.TRAILING))))
                 .addGap(18, 18, 18)
                 .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -403,18 +462,19 @@ public class CalcularNomina extends javax.swing.JPanel {
                             .addComponent(txtDiasLaborales, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txtSueldoSub, javax.swing.GroupLayout.PREFERRED_SIZE, 161, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(txtPrestamos, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtExtras, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(17, 17, 17)
+                            .addComponent(txtTotalSueldoNeto, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(btnCalcular)
-                            .addComponent(jButton5)
-                            .addComponent(jButton6))
+                            .addGroup(nominaOneLayout.createSequentialGroup()
+                                .addGap(17, 17, 17)
+                                .addComponent(btnCalcular))
+                            .addGroup(nominaOneLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(jButton5)))
                         .addGap(0, 0, Short.MAX_VALUE))
                     .addGroup(nominaOneLayout.createSequentialGroup()
                         .addComponent(payDate, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnRegistro, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addContainerGap())))
             .addGroup(nominaOneLayout.createSequentialGroup()
                 .addGap(126, 126, 126)
@@ -428,7 +488,7 @@ public class CalcularNomina extends javax.swing.JPanel {
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 544, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
-        nominaOneLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {endDate, jButton1, payDate, startDate, txtDiasLaborales, txtExtras, txtPrestamos, txtSueldoDiario, txtSueldoSub, txtTotal});
+        nominaOneLayout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {btnRegistro, endDate, payDate, startDate, txtDiasLaborales, txtPrestamos, txtSueldoDiario, txtSueldoSub, txtTotalSueldoNeto});
 
         nominaOneLayout.setVerticalGroup(
             nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -470,33 +530,19 @@ public class CalcularNomina extends javax.swing.JPanel {
                 .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(txtDiasLaborales, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(nominaOneLayout.createSequentialGroup()
-                        .addGap(32, 32, 32)
-                        .addComponent(jButton5))
-                    .addGroup(nominaOneLayout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel11)
-                            .addComponent(txtSueldoSub, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(nominaOneLayout.createSequentialGroup()
-                        .addGap(7, 7, 7)
-                        .addComponent(jButton6))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, nominaOneLayout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel9)
-                            .addComponent(txtPrestamos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGap(18, 18, 18)
-                .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(nominaOneLayout.createSequentialGroup()
-                        .addGap(3, 3, 3)
-                        .addComponent(jLabel10))
-                    .addComponent(txtExtras, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtTotal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel11)
+                    .addComponent(txtSueldoSub, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(21, 21, 21)
+                .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel9)
+                        .addComponent(txtPrestamos, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jButton5))
+                .addGap(32, 32, 32)
+                .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtTotalSueldoNeto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel14))
                 .addGap(25, 25, 25)
                 .addGroup(nominaOneLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -504,8 +550,8 @@ public class CalcularNomina extends javax.swing.JPanel {
                         .addGap(6, 6, 6)
                         .addComponent(jLabel15))
                     .addComponent(payDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton1))
-                .addContainerGap(14, Short.MAX_VALUE))
+                    .addComponent(btnRegistro))
+                .addContainerGap(43, Short.MAX_VALUE))
         );
 
         tipoNomina.add(jRadioButton2);
@@ -588,7 +634,7 @@ public class CalcularNomina extends javax.swing.JPanel {
             .addGroup(rootLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, rootLayout.createSequentialGroup()
                     .addContainerGap(85, Short.MAX_VALUE)
-                    .addComponent(nominaOne, javax.swing.GroupLayout.PREFERRED_SIZE, 448, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(nominaOne, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addContainerGap(41, Short.MAX_VALUE)))
         );
 
@@ -639,21 +685,33 @@ public class CalcularNomina extends javax.swing.JPanel {
         this.showForms(false, true);
     }//GEN-LAST:event_jRadioButton2ActionPerformed
 
+    private void btnRegistroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRegistroActionPerformed
+        save();
+    }//GEN-LAST:event_btnRegistroActionPerformed
+
+    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+        PrestamoView dialog = new PrestamoView(new javax.swing.JFrame(), true);
+        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                dialog.setVisible(false);
+            }
+        });
+        dialog.setVisible(true);
+    }//GEN-LAST:event_jButton5ActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnBuscar;
     private javax.swing.JButton btnCalcular;
+    private javax.swing.JButton btnRegistro;
     private javax.swing.JComboBox<String> cmbSearch;
     private com.toedter.calendar.JDateChooser endDate;
-    private javax.swing.JButton jButton1;
+    private com.toedter.calendar.JDateChooser endDateALL;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
     private javax.swing.JCheckBox jCheckBox1;
-    private com.toedter.calendar.JDateChooser jDateChooser1;
-    private com.toedter.calendar.JDateChooser jDateChooser2;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
     private javax.swing.JLabel jLabel12;
     private javax.swing.JLabel jLabel13;
@@ -676,14 +734,14 @@ public class CalcularNomina extends javax.swing.JPanel {
     private com.toedter.calendar.JDateChooser payDate;
     private javax.swing.JPanel root;
     private com.toedter.calendar.JDateChooser startDate;
+    private com.toedter.calendar.JDateChooser startDateALL;
     private javax.swing.JTable tblNomina;
     private javax.swing.JPanel tipo;
     private javax.swing.ButtonGroup tipoNomina;
     private javax.swing.JTextField txtDiasLaborales;
-    private javax.swing.JTextField txtExtras;
     private javax.swing.JTextField txtPrestamos;
     private javax.swing.JTextField txtSueldoDiario;
     private javax.swing.JTextField txtSueldoSub;
-    private javax.swing.JTextField txtTotal;
+    private javax.swing.JTextField txtTotalSueldoNeto;
     // End of variables declaration//GEN-END:variables
 }

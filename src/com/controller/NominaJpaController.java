@@ -10,6 +10,7 @@ import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -33,6 +34,7 @@ public class NominaJpaController implements Serializable {
             em.getTransaction().begin();
             em.persist(nomina);
             em.getTransaction().commit();
+            JOptionPane.showMessageDialog(null, "Nomina registrado correctamente", "Aviso", JOptionPane.PLAIN_MESSAGE);
         } finally {
             if (em != null) {
                 em.close();
@@ -129,7 +131,16 @@ public class NominaJpaController implements Serializable {
             em.close();
         }
     }
-     public List<Nomina> getNominaById(Integer id) {
+
+    public boolean existsNomina(Integer id) {
+        String query = "select count(id) from NOMINA  where id=" + id;
+        final EntityManager em = getEntityManager();
+        // you will always get a single result
+        Long count = (Long) em.createNativeQuery(query).getSingleResult();
+        return ((count.equals(0L)) ? false : true);
+    }
+
+    public List<Nomina> getNominaById(Integer id) {
         EntityManager em = getEntityManager();
         try {
 
@@ -142,5 +153,14 @@ public class NominaJpaController implements Serializable {
             return null;
         }
 
+    }
+
+    public Double getTotalPrestamosBetweenDates(Integer idOperador, String startDate, String endDate) {
+        final EntityManager em = getEntityManager();
+        String query = "SELECT SUM(prestamo) FROM PRESTAMO p WHERE  p.fecha_prestamo BETWEEN '" + startDate + "' AND  '" + endDate + "' AND p.operador_id='" + idOperador + "'";
+
+        // you will always get a single result
+        Double count = (Double) em.createNativeQuery(query).getSingleResult();
+        return count;
     }
 }

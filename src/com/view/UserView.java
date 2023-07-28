@@ -4,6 +4,7 @@ import com.dao.UserDao;
 import com.utils.Hash;
 import java.util.List;
 import com.utils.Filter;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
@@ -15,6 +16,7 @@ public class UserView extends javax.swing.JPanel {
 
     private com.model.User user;
     private UserDao userDao;
+    private Hash hash;
 
     /**
      * Creates new form User
@@ -24,6 +26,11 @@ public class UserView extends javax.swing.JPanel {
         this.userDao = new UserDao();
         showData(tblUser);
         this.showForms(false, true);
+        //   this.password.putClientProperty("PasswordField.showRevealButton", true);
+//        this.password.putClientProperty("PasswordField.revealIcon", 
+//                new ImageIcon(getClass().getResource("/com/utils/icon/eye.png")));
+//       this.password.putClientProperty("JTextField.leadingIcon",
+//                new javax.swing.ImageIcon(getClass().getResource("/com/utils/icon/eye.png")));
     }
 
     public void showForms(boolean showForm, boolean showList) {
@@ -35,6 +42,22 @@ public class UserView extends javax.swing.JPanel {
         panelList.setVisible(showList);
     }
 
+    private boolean validarPass() {
+        String pass = new String(password.getPassword());
+        String confPass = new String(txtConfirmarPass.getPassword());
+
+        String newPass = hash.sha1(pass);
+        String newConf = hash.sha1(confPass);
+
+        if (newConf.equals(newPass)) {
+            return true;
+
+        } else {
+            JOptionPane.showMessageDialog(null, "La contraseña no coincide!!");
+            return false;
+        }
+    }
+
     //metodo para  asignar los valores de cada atributo y usar el dao para guardar los datos en la db
     private void save() {
         user = new com.model.User();
@@ -43,12 +66,12 @@ public class UserView extends javax.swing.JPanel {
         user.setApeMaterno(txtAMaterno.getText());
         user.setNickname(txtUsuario.getText());
         /* encirtamos la contraseña con sha */
-        String pass = password.getPassword().toString();
+        String pass = new String(password.getPassword());
+//        String newPass = Hash.sha1(pass);
+//        System.out.println("pass en user view " + newPass);
         String newPass = Hash.sha1(pass);
-        System.out.println("pass en user view " + newPass);
-        String md5 =Hash.md5(pass);
-        System.out.println("encrp "+md5);
-        user.setPassword(pass);
+
+        user.setPassword(newPass);
         user.setRole((String) cmbRole.getSelectedItem());
         userDao.addUser(user);
 
@@ -62,6 +85,7 @@ public class UserView extends javax.swing.JPanel {
         txtUsuario.setText("");
         password.setText(null);
         cmbRole.setSelectedIndex(0);
+        txtConfirmarPass.setText("");
 
     }
 
@@ -135,12 +159,11 @@ public class UserView extends javax.swing.JPanel {
         user.setApeMaterno(txtAMaterno.getText());
         user.setNickname(txtUsuario.getText());
         user.setRole((String) cmbRole.getSelectedItem());
-        String pass = password.getPassword().toString();
+        String pass = new String(password.getPassword());
+        //  String newPass = Hash.sha1(pass);
+        // System.out.println("pass en user view " + newPass);
         String newPass = Hash.sha1(pass);
-        System.out.println("pass en user view " + newPass);
-        String md5 =Hash.md5(pass);
-        System.out.println("encrp "+md5);
-      user.setPassword(newPass);
+        user.setPassword(newPass);
         userDao.update(user);
         showData(tblUser);
         this.showForms(false, true);
@@ -184,6 +207,8 @@ public class UserView extends javax.swing.JPanel {
         txtUsuario = new javax.swing.JTextField();
         lbUser1 = new javax.swing.JLabel();
         password = new javax.swing.JPasswordField();
+        jLabel2 = new javax.swing.JLabel();
+        txtConfirmarPass = new javax.swing.JPasswordField();
         jLabel1 = new javax.swing.JLabel();
         cmbRole = new javax.swing.JComboBox<>();
 
@@ -310,7 +335,7 @@ public class UserView extends javax.swing.JPanel {
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
-        form.setLayout(new java.awt.GridLayout(3, 1, 10, 30));
+        form.setLayout(new java.awt.GridLayout(4, 1, 10, 30));
 
         lbName.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         lbName.setText("Nombre:");
@@ -334,9 +359,14 @@ public class UserView extends javax.swing.JPanel {
         form.add(txtUsuario);
 
         lbUser1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        lbUser1.setText("Password");
+        lbUser1.setText("Contraseña");
         form.add(lbUser1);
         form.add(password);
+
+        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        jLabel2.setText("Confirmar Conraseña");
+        form.add(jLabel2);
+        form.add(txtConfirmarPass);
 
         jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         jLabel1.setText("Role");
@@ -350,18 +380,21 @@ public class UserView extends javax.swing.JPanel {
         panelFormLayout.setHorizontalGroup(
             panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelFormLayout.createSequentialGroup()
-                .addGap(5, 5, 5)
-                .addComponent(form, javax.swing.GroupLayout.PREFERRED_SIZE, 730, javax.swing.GroupLayout.PREFERRED_SIZE))
-            .addGroup(panelFormLayout.createSequentialGroup()
-                .addGap(459, 459, 459)
-                .addComponent(options, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelFormLayout.createSequentialGroup()
+                        .addGap(459, 459, 459)
+                        .addComponent(options, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(panelFormLayout.createSequentialGroup()
+                        .addGap(5, 5, 5)
+                        .addComponent(form, javax.swing.GroupLayout.PREFERRED_SIZE, 752, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(63, 63, 63))
         );
         panelFormLayout.setVerticalGroup(
             panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelFormLayout.createSequentialGroup()
                 .addGap(49, 49, 49)
-                .addComponent(form, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, 0)
+                .addComponent(form, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(options, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
@@ -395,11 +428,13 @@ public class UserView extends javax.swing.JPanel {
 
     private void btnSaveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSaveActionPerformed
         if (btnSave.getText().endsWith("ardar")) {
-            save();
-            cleaAll();
-            // this.showForm(list);
-            this.showData(tblUser);
-            btnNew.setEnabled(true);
+            if (validarPass()) {
+                save();
+                cleaAll();
+                this.showData(tblUser);
+                btnNew.setEnabled(true);
+            }
+
         } else if (btnSave.getText().endsWith("datos")) {
             update();
             cleaAll();
@@ -432,6 +467,7 @@ public class UserView extends javax.swing.JPanel {
     javax.swing.JComboBox<String> cmbRole;
     javax.swing.JPanel form;
     javax.swing.JLabel jLabel1;
+    javax.swing.JLabel jLabel2;
     javax.swing.JScrollPane jScrollPane1;
     javax.swing.JLabel lbAma;
     javax.swing.JLabel lbApa;
@@ -448,6 +484,7 @@ public class UserView extends javax.swing.JPanel {
     javax.swing.JButton tbnDelete;
     javax.swing.JTextField txtAMaterno;
     javax.swing.JTextField txtApaterno;
+    javax.swing.JPasswordField txtConfirmarPass;
     javax.swing.JTextField txtName;
     com.utils.components.txtPlaceholder txtSearch;
     javax.swing.JTextField txtUsuario;

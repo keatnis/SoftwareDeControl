@@ -2,14 +2,19 @@ package com.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Basic;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -23,8 +28,7 @@ import javax.persistence.TemporalType;
 @NamedQueries({
     @NamedQuery(name = "Nomina.findAll", query = "SELECT n FROM Nomina n"),
     @NamedQuery(name = "Nomina.findById", query = "SELECT n FROM Nomina n WHERE n.id = :id ORDER BY n.fechaPago DESC"),
-     @NamedQuery(name = "Nomina.findByPrestamos", query = "SELECT n FROM Nomina n WHERE n.prestamos = :prestamos"),
-//    @NamedQuery(name = "Nomina.findByDiasLaborados", query = "SELECT n FROM Nomina n WHERE n.diasLaborados = :diasLaborados"),
+    @NamedQuery(name = "Nomina.findByPrestamos", query = "SELECT n FROM Nomina n WHERE n.prestamos = :prestamos"), //    @NamedQuery(name = "Nomina.findByDiasLaborados", query = "SELECT n FROM Nomina n WHERE n.diasLaborados = :diasLaborados"),
 //    @NamedQuery(name = "Nomina.findBySueldoDiario", query = "SELECT n FROM Nomina n WHERE n.sueldoDiario = :sueldoDiario"),
 //    @NamedQuery(name = "Nomina.findByDescuentos", query = "SELECT n FROM Nomina n WHERE n.descuentos = :descuentos"),
 //    @NamedQuery(name = "Nomina.findBySueldoNeto", query = "SELECT n FROM Nomina n WHERE n.sueldoNeto = :sueldoNeto"),
@@ -37,7 +41,7 @@ public class Nomina implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @Column(name = "id")
+    @Column(name = "ID")
     private Integer id;
     // @Max(value=?)  @Min(value=?)//if you know range of your decimal fields consider using these annotations to enforce field validation
 
@@ -63,11 +67,16 @@ public class Nomina implements Serializable {
     @Column(name = "fecha_pago")
     @Temporal(TemporalType.DATE)
     private Date fechaPago;
+    @ManyToOne()
+    @JoinColumn(name = "operador_id")
+    private Operador operador;
 
     public Nomina() {
     }
 
-    public Nomina(Integer id, int diasLaborados, float sueldoDiario, Float prestamos, Float descuentos, float sueldoNeto, String observaciones, String periodo, Date fechaPago) {
+
+
+    public Nomina(Integer id, int diasLaborados, float sueldoDiario, Float prestamos, Float descuentos, float sueldoNeto, String observaciones, String periodo, Date fechaPago, Operador operador) {
         this.id = id;
         this.diasLaborados = diasLaborados;
         this.sueldoDiario = sueldoDiario;
@@ -77,15 +86,24 @@ public class Nomina implements Serializable {
         this.observaciones = observaciones;
         this.periodo = periodo;
         this.fechaPago = fechaPago;
+        this.operador = operador;
+    }
+
+    public Operador getOperador() {
+        return operador;
+    }
+
+    public void setOperador(Operador operador) {
+        this.operador = operador;
     }
 
     public Date getFechaPago() {
         if (fechaPago != null) {
             return new Date(fechaPago.getTime());
         } else {
-          return    fechaPago = null;
+            return fechaPago = null;
         }
-       
+
     }
 
     public void setFechaPago(Date fechaPago) {

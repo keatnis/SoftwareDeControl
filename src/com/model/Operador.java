@@ -1,6 +1,7 @@
 package com.model;
 
 import java.io.Serializable;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -13,6 +14,7 @@ import javax.persistence.JoinTable;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
@@ -89,12 +91,14 @@ public class Operador implements Serializable {
     @JoinTable(name = "OPERADOR_EMERGENCIA",
             joinColumns = @JoinColumn(name = "operador_id", referencedColumnName = "operador_id"))
     private ContactoEmergencia contactoEmergencia;
-     @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinTable(name = "JOB_OPERADOR",
             joinColumns = @JoinColumn(name = "operador_id", referencedColumnName = "operador_id"))
     private Job job;
-
-    public Operador() {
+//     @OneToMany(mappedBy = "nomina", cascade = CascadeType.ALL, orphanRemoval = true)
+//    private List<Nomina> nomina;
+    
+     public Operador() {
     }
 
     public Operador(Integer id, String nombre, String apePaterno, String apeMaterno, String calle, String num, String colonia, String ciudad, String estado, String telefono, String telefono2, String alergias, String typeblood, boolean status, byte[] file, Job job, ContactoEmergencia contactoEmergencia) {

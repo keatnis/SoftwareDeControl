@@ -11,6 +11,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+import javax.swing.JOptionPane;
 import org.eclipse.persistence.internal.jpa.EntityManagerFactoryProvider;
 import raven.toast.Notifications;
 
@@ -37,15 +38,17 @@ public class UserJpaController implements Serializable {
             em.getTransaction().begin();
             em.persist(user);
             em.getTransaction().commit();
-            Notifications.getInstance().show(
-                    Notifications.Type.SUCCESS,
-                    Notifications.Location.TOP_CENTER,
-                    10000, " Usuario guardado correctamente!");
+            JOptionPane.showMessageDialog(null, " Usuario guardado correctamente!");
+//            Notifications.getInstance().show(
+//                    Notifications.Type.SUCCESS,
+//                    Notifications.Location.TOP_CENTER,
+//                    10000, " Usuario guardado correctamente!");
         } catch (Exception ex) {
-            Notifications.getInstance().show(
-                    Notifications.Type.ERROR,
-                    Notifications.Location.TOP_CENTER,
-                    ex.getMessage());
+//            Notifications.getInstance().show(
+//                    Notifications.Type.ERROR,
+//                    Notifications.Location.TOP_CENTER,
+//                    ex.getMessage());
+            JOptionPane.showMessageDialog(null, ex.getMessage());
         } finally {
             if (em != null) {
                 em.close();
@@ -60,20 +63,22 @@ public class UserJpaController implements Serializable {
             em.getTransaction().begin();
             user = em.merge(user);
             em.getTransaction().commit();
-            Notifications.getInstance().show(
-                    Notifications.Type.SUCCESS,
-                    Notifications.Location.TOP_CENTER,
-                    10000, " Datos del usuario actualizado correctamente!");
+//            Notifications.getInstance().show(
+//                    Notifications.Type.SUCCESS,
+//                    Notifications.Location.TOP_CENTER,
+//                    10000, " Datos del usuario actualizado correctamente!");
+            JOptionPane.showMessageDialog(null, " Datos del usuario actualizado correctamente!");
         } catch (Exception ex) {
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
                 Integer id = user.getId();
                 if (findUser(id) == null) {
                     // throw new NonexistentEntityException("El usuario con el ID: " + id + " no existe");
-                    Notifications.getInstance().show(
-                            Notifications.Type.ERROR,
-                            Notifications.Location.TOP_CENTER,
-                            "El usuario con el ID: " + id + " no existe");
+//                    Notifications.getInstance().show(
+//                            Notifications.Type.ERROR,
+//                            Notifications.Location.TOP_CENTER,
+//                            "El usuario con el ID: " + id + " no existe");
+                    JOptionPane.showMessageDialog(null, "El usuario con el ID: " + id + " no existe");
                 }
             }
             throw ex;
@@ -99,10 +104,11 @@ public class UserJpaController implements Serializable {
             }
             em.remove(user);
             em.getTransaction().commit();
-            Notifications.getInstance().show(
-                    Notifications.Type.INFO,
-                    Notifications.Location.BOTTOM_CENTER,
-                    8000, " Usuario eliminado!");
+//            Notifications.getInstance().show(
+//                    Notifications.Type.INFO,
+//                    Notifications.Location.BOTTOM_CENTER,
+//                    8000, " Usuario eliminado!");
+            JOptionPane.showMessageDialog(null, " Usuario eliminado!");
         } finally {
             if (em != null) {
                 em.close();
@@ -164,12 +170,12 @@ public class UserJpaController implements Serializable {
         return ((count.equals(0L)) ? false : true);
 
     }
-    
-       public List<User> findByUsername(String user){
+
+    public List<User> findByUsername(String user) {
         EntityManager em = getEntityManager();
-        List<User> userList= em.createNamedQuery("User.findByNickname")
-                    .setParameter("nickname", user).getResultList();    
-       
+        List<User> userList = em.createNamedQuery("User.findByNickname")
+                .setParameter("nickname", user).getResultList();
+
         return userList;
     }
 }
