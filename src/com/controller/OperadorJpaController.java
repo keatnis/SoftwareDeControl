@@ -1,21 +1,18 @@
 package com.controller;
 
 import com.controller.exceptions.NonexistentEntityException;
-import com.dao.DashboardCountDTO;
 import com.model.Operador;
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.time.LocalDate;
 import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.Persistence;
-import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import javax.swing.JOptionPane;
-
 
 /**
  *
@@ -148,7 +145,10 @@ public class OperadorJpaController implements Serializable {
     }
 
     public List<Operador> getOperadorByNameLastName(String key) {
-        String sqlString = "SELECT * FROM OPERADOR  WHERE nombre LIKE '%" + key + "%' ";
+        String sqlString = "SELECT * FROM OPERADOR  WHERE nombre "
+                + "LIKE '%" + key + "%' OR "
+                + " ape_paterno LIKE '%" + key + "%' OR"
+                + " ape_materno LIKE '%" + key + "%'";
         EntityManager em = getEntityManager();
         List<Operador> list = em.createNativeQuery(sqlString, Operador.class)
                 .getResultList();
@@ -166,14 +166,20 @@ public class OperadorJpaController implements Serializable {
 
     public Object[] getCountDashboard() {
         EntityManager em = getEntityManager();
+        int month = LocalDate.now().getMonthValue();
+        /*
+         "SELECT s FROM Servicio s WHERE  EXTRACT(MONTH FROM s.proximoServicio) = :proximoServicio  ORDER BY s.proximoServicio ASC"),})
+         */
         String query = "SELECT count(id) AS combustible,\n"
-                + "(SELECT count(vehiculo_id) from VEHICULO ) as vehiculos,\n"
-                + "(select count(operador_id) from OPERADOR ) as trabajadores,\n"
-                + "(SELECT count(id) from FLETE) AS fletes\n"
-                + "FROM RECARGA_COMBUSTIBLE;";
+                + "               (SELECT count(vehiculo_id) from VEHICULO ) as vehiculos,\n"
+                + "                (select count(operador_id) from OPERADOR o WHERE o.status=1) as trabajadores,\n"
+                + "                (SELECT count(id) from FLETE) AS fletes\n"
+                + "                FROM RECARGA_COMBUSTIBLE r WHERE EXTRACT(MONTH FROM r.fecha_recarga) = ?";
         // you will always get a single result
 
-        return (Object[]) em.createNativeQuery(query).getSingleResult();
+        return (Object[]) em.createNativeQuery(query)
+                .setParameter(1, month)
+                .getSingleResult();
     }
 
     public List<Operador> getAllOperador() {

@@ -41,7 +41,20 @@ public class NominaJpaController implements Serializable {
             }
         }
     }
-
+ public void createAll(Nomina nomina) {
+        EntityManager em = null;
+        try {
+            em = getEntityManager();
+            em.getTransaction().begin();
+            em.persist(nomina);
+            em.getTransaction().commit();
+          
+        } finally {
+            if (em != null) {
+                em.close();
+            }
+        }
+    }
     public void edit(Nomina nomina) throws NonexistentEntityException, Exception {
         EntityManager em = null;
         try {
@@ -140,12 +153,13 @@ public class NominaJpaController implements Serializable {
         return ((count.equals(0L)) ? false : true);
     }
 
-    public List<Nomina> getNominaById(Integer id) {
+    public Object getNominaById(Integer id) {
         EntityManager em = getEntityManager();
+        String sql = "SELECT fecha_fin FROM NOMINA WHERE operador_id=? AND fecha_fin IS NOT NULL ORDER BY fecha_pago ASC limit 1;";
         try {
 
-            List<Nomina> list = em.createNamedQuery("Nomina.findById", Nomina.class)
-                    .setParameter("id", id).getResultList();
+            Object list = em.createNativeQuery(sql)
+                    .setParameter(1, id).getSingleResult();
             return list;
         } catch (Exception e) {
 

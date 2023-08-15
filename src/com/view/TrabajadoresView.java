@@ -17,6 +17,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Calendar;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
@@ -51,7 +52,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
             "DIRECCION", "CALLE", "NUM", "COLONIA", "CIUDAD", "ESTADO",
             "TIPO SANGRE", "ALERGIAS", "INE", "CONTACTO EMERG.",
             "NOMBRE", "A.PATERNO", "A.MATERNO", "TELEFONO", "PARENTESCO",
-            "SUELDO DIARIO", "TOTAL DIAS LABORALES", "FILE"};
+            "SUELDO DIARIO", "TOTAL DIAS LABORALES", "ARCHIVO", "DIAS TRABAJO"};
         /*coloco el nombre de las  columnas de la tabla USER a el modelo */
         DefaultTableModel model = new DefaultTableModel(null, titles) {
 
@@ -93,7 +94,8 @@ public class TrabajadoresView extends javax.swing.JPanel {
                 op.getContactoEmergencia().getParentesco(),
                 op.getJob().getSueldoDiario(),
                 op.getJob().getTotalDiasLaborales(),
-                op.getFile()
+                op.getFile(),
+                op.getJob().getDiasLaborales()
             });
             /*establecemos el modelo  al Jtable llamado jTabla*/
 
@@ -106,11 +108,11 @@ public class TrabajadoresView extends javax.swing.JPanel {
         /* asignamos el ancho de cada columna de la tabla*/
 
         int[] anchos = {30, 150, 150, 200, 150, 150, 200, 150, 100, 100, 100,
-            100, 100, 150, 150, 100, 250, 150, 150, 150, 150, 150, 100, 100, 11};
+            100, 100, 150, 150, 100, 250, 150, 150, 150, 150, 150, 100, 100, 11, 0};
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
         }
-        this.hideColumns(table, new int[]{8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 24});
+        this.hideColumns(table, new int[]{8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 24, 25});
     }
 
     private static JButton getFile(Object object) {
@@ -163,10 +165,21 @@ public class TrabajadoresView extends javax.swing.JPanel {
         cmbParentescoCont.setSelectedItem(String.valueOf(tblOperador.getValueAt(row, 21)));
         txtSueldoDiario.setText(String.valueOf(tblOperador.getValueAt(row, 22)));
         pdf = (byte[]) tblOperador.getValueAt(row, 24);
-
+        Object diasTrabajo = tblOperador.getValueAt(row, 25);
+        mostrarDiasLaborales((int[]) diasTrabajo);
         showForms(true, false);
 
         //  showForm(formPanel);
+    }
+
+    private void mostrarDiasLaborales(int[] dias) {
+        cbMonday.setSelected((dias[0] != 0));
+        cbThusday.setSelected(dias[1] != 0);
+        cbWenesday.setSelected((dias[2] > 0));
+        cbThurday.setSelected(dias[3] != 0);
+        cbFriday.setSelected(dias[4] != 0);
+        cbSaturday.setSelected(dias[5] != 0);
+        cbSunday.setSelected(dias[0] != 0);
     }
 
     private void update() {
@@ -190,7 +203,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
         operador.setTelefono2(txtTelefono2.getText());
         operador.setAlergias(txtAlergias.getText());
         operador.setTypeblood((String) cmbTypeblood.getSelectedItem());
-
+        operador.setStatus(true);   
         operador.setFile(pdf);
         // datos contacto emergencia
 
@@ -207,8 +220,10 @@ public class TrabajadoresView extends javax.swing.JPanel {
         job = new Job();
         job.setPuesto(txtPuesto.getText());
         job.setSueldoDiario(Float.parseFloat(txtSueldoDiario.getText()));
-        boolean[] dias = {cbMonday.isSelected(), cbThusday.isSelected(),
-            cbWenesday.isSelected(), cbThurday.isSelected(), cbFriday.isSelected(), cbSaturday.isSelected(), cbSunday.isSelected()};
+        int[] dias = new int[]{cbMonday.isSelected() ? Calendar.MONDAY : 0, cbThusday.isSelected() ? Calendar.TUESDAY : 0,
+            cbWenesday.isSelected() ? Calendar.WEDNESDAY : 0, cbThurday.isSelected() ? Calendar.THURSDAY : 0,
+            cbFriday.isSelected() ? Calendar.FRIDAY : 0,
+            cbSaturday.isSelected() ? Calendar.SATURDAY : 0, cbSunday.isSelected() ? Calendar.SUNDAY : 0};
         job.setDiasLaborales(dias);
 
         job.setTotalDiasLaborales(countTrueElements(dias));
@@ -236,7 +251,12 @@ public class TrabajadoresView extends javax.swing.JPanel {
         panelList.setVisible(showList);
     }
 
+    private void validarFormulario() {
+        Validaciones.esCajaVacia(txtSueldoDiario, "El campo sueldo esta vacio");
+    }
+
     private void save() {
+        validarFormulario();
         operador = new Operador();
         operador.setNombre(txtNombre.getText());
         operador.setApePaterno(txtAPaterno.getText());
@@ -267,8 +287,10 @@ public class TrabajadoresView extends javax.swing.JPanel {
         job = new Job();
         job.setPuesto(txtPuesto.getText());
         job.setSueldoDiario(Float.parseFloat(txtSueldoDiario.getText()));
-        boolean[] dias = {cbMonday.isSelected(), cbThusday.isSelected(),
-            cbWenesday.isSelected(), cbThurday.isSelected(), cbFriday.isSelected(), cbSaturday.isSelected(), cbSunday.isSelected()};
+        int[] dias = new int[]{cbMonday.isSelected() ? Calendar.MONDAY : 0, cbThusday.isSelected() ? Calendar.TUESDAY : 0,
+            cbWenesday.isSelected() ? Calendar.WEDNESDAY : 0, cbThurday.isSelected() ? Calendar.THURSDAY : 0,
+            cbFriday.isSelected() ? Calendar.FRIDAY : 0,
+            cbSaturday.isSelected() ? Calendar.SATURDAY : 0, cbSunday.isSelected() ? Calendar.SUNDAY : 0};
         job.setDiasLaborales(dias);
 
         job.setTotalDiasLaborales(countTrueElements(dias));
@@ -277,12 +299,12 @@ public class TrabajadoresView extends javax.swing.JPanel {
 
     }
 
-    public static int countTrueElements(boolean[] array) {
+    public static int countTrueElements(int[] array) {
 
         int count = 0;
 
         for (int i = 0; i < array.length; i++) {
-            if (array[i]) {
+            if (array[i] > 0) {
                 count++;
             }
         }
@@ -353,6 +375,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
         btnNew = new javax.swing.JButton();
         btnEditar = new javax.swing.JButton();
         btnDelete = new javax.swing.JButton();
+        jLabel18 = new javax.swing.JLabel();
         btnExport = new javax.swing.JButton();
         panelForm = new javax.swing.JPanel();
         form = new javax.swing.JPanel();
@@ -395,7 +418,8 @@ public class TrabajadoresView extends javax.swing.JPanel {
         jButton2 = new javax.swing.JButton();
         cmbTypeblood = new javax.swing.JComboBox<>();
         lbStatus = new javax.swing.JLabel();
-        jPanel2 = new javax.swing.JPanel();
+        btnCancel = new javax.swing.JButton();
+        btnSave = new javax.swing.JButton();
         jPanel4 = new javax.swing.JPanel();
         jLabel17 = new javax.swing.JLabel();
         jLabel20 = new javax.swing.JLabel();
@@ -408,13 +432,10 @@ public class TrabajadoresView extends javax.swing.JPanel {
         cbSaturday = new javax.swing.JCheckBox();
         cbSunday = new javax.swing.JCheckBox();
         txtSueldoDiario = new javax.swing.JTextField();
-        btns = new javax.swing.JPanel();
-        btnCancel = new javax.swing.JButton();
-        btnSave = new javax.swing.JButton();
 
-        setLayout(new java.awt.GridBagLayout());
+        setLayout(new java.awt.BorderLayout());
 
-        main.setLayout(new java.awt.CardLayout());
+        main.setLayout(new java.awt.BorderLayout());
 
         panelList.setLayout(new java.awt.BorderLayout(0, 10));
 
@@ -452,6 +473,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        tblOperador.setShowGrid(true);
         tblOperador.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 tblOperadorMouseClicked(evt);
@@ -487,6 +509,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
             }
         });
         jPanel1.add(btnDelete);
+        jPanel1.add(jLabel18);
 
         btnExport.setText("Exportar datos");
         btnExport.addActionListener(new java.awt.event.ActionListener() {
@@ -506,15 +529,13 @@ public class TrabajadoresView extends javax.swing.JPanel {
             optionsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(optionsLayout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 435, Short.MAX_VALUE))
+                .addGap(0, 385, Short.MAX_VALUE))
         );
 
         panelList.add(options, java.awt.BorderLayout.EAST);
         options.getAccessibleContext().setAccessibleName("Option");
 
-        main.add(panelList, "card2");
-
-        panelForm.setLayout(new javax.swing.BoxLayout(panelForm, javax.swing.BoxLayout.PAGE_AXIS));
+        main.add(panelList, java.awt.BorderLayout.PAGE_START);
 
         form.setMaximumSize(null);
 
@@ -660,9 +681,9 @@ public class TrabajadoresView extends javax.swing.JPanel {
             .addGroup(formLayout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(formLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(lbNombre, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 231, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lbNombre, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 182, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -679,7 +700,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
                     .addGroup(formLayout.createSequentialGroup()
                         .addComponent(jButton2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(lbStatus, javax.swing.GroupLayout.DEFAULT_SIZE, 193, Short.MAX_VALUE))
+                        .addComponent(lbStatus, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addGroup(formLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                         .addComponent(txtAlergias, javax.swing.GroupLayout.Alignment.TRAILING)
                         .addComponent(txtTelefono2, javax.swing.GroupLayout.Alignment.TRAILING)
@@ -706,8 +727,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
                             .addGroup(formLayout.createSequentialGroup()
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(cmbTypeblood, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
-                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(0, 143, Short.MAX_VALUE))
+                    .addComponent(jPanel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
         );
         formLayout.setVerticalGroup(
             formLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -776,7 +796,21 @@ public class TrabajadoresView extends javax.swing.JPanel {
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
 
-        panelForm.add(form);
+        btnCancel.setText("cancelar");
+        btnCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnCancelActionPerformed(evt);
+            }
+        });
+
+        btnSave.setBackground(javax.swing.UIManager.getDefaults().getColor("Button.default.focusColor"));
+        btnSave.setFont(new java.awt.Font("Cantarell", 1, 15)); // NOI18N
+        btnSave.setText("guardar");
+        btnSave.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSaveActionPerformed(evt);
+            }
+        });
 
         jPanel4.setBorder(javax.swing.BorderFactory.createTitledBorder("Nómina"));
 
@@ -835,11 +869,9 @@ public class TrabajadoresView extends javax.swing.JPanel {
         cbSaturday.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         jToolBar1.add(cbSaturday);
 
-        diasSemana.add(cbSunday);
         cbSunday.setText("Domingo");
         cbSunday.setFocusable(false);
         cbSunday.setHorizontalTextPosition(javax.swing.SwingConstants.CENTER);
-        cbSunday.setIconTextGap(8);
         cbSunday.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
         jToolBar1.add(cbSunday);
 
@@ -854,15 +886,15 @@ public class TrabajadoresView extends javax.swing.JPanel {
         jPanel4Layout.setHorizontalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
-                .addGap(31, 31, 31)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel20)
                     .addGroup(jPanel4Layout.createSequentialGroup()
                         .addComponent(jLabel17)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(txtSueldoDiario, javax.swing.GroupLayout.PREFERRED_SIZE, 175, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 474, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(491, Short.MAX_VALUE))
+                        .addComponent(txtSueldoDiario, javax.swing.GroupLayout.PREFERRED_SIZE, 271, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(128, 128, 128))
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -875,64 +907,44 @@ public class TrabajadoresView extends javax.swing.JPanel {
                 .addComponent(jLabel20)
                 .addGap(18, 18, 18)
                 .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(188, 188, 188))
         );
 
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(112, 112, 112)
-                .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        javax.swing.GroupLayout panelFormLayout = new javax.swing.GroupLayout(panelForm);
+        panelForm.setLayout(panelFormLayout);
+        panelFormLayout.setHorizontalGroup(
+            panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelFormLayout.createSequentialGroup()
+                .addComponent(form, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGroup(panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(panelFormLayout.createSequentialGroup()
+                        .addGap(168, 168, 168)
+                        .addComponent(btnCancel)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnSave))
+                    .addGroup(panelFormLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, 405, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(31, 31, 31))
         );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addComponent(jPanel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
-        );
-
-        panelForm.add(jPanel2);
-
-        btnCancel.setText("cancelar");
-        btnCancel.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnCancelActionPerformed(evt);
-            }
-        });
-
-        btnSave.setBackground(javax.swing.UIManager.getDefaults().getColor("Button.default.focusColor"));
-        btnSave.setText("guardar");
-        btnSave.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnSaveActionPerformed(evt);
-            }
-        });
-
-        javax.swing.GroupLayout btnsLayout = new javax.swing.GroupLayout(btns);
-        btns.setLayout(btnsLayout);
-        btnsLayout.setHorizontalGroup(
-            btnsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(btnsLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(btnCancel)
-                .addGap(18, 18, 18)
-                .addComponent(btnSave))
-        );
-        btnsLayout.setVerticalGroup(
-            btnsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(btnsLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                .addComponent(btnSave)
-                .addComponent(btnCancel))
+        panelFormLayout.setVerticalGroup(
+            panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(panelFormLayout.createSequentialGroup()
+                .addGap(49, 49, 49)
+                .addGroup(panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(form, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnCancel)
+                    .addComponent(btnSave)))
         );
 
-        panelForm.add(btns);
+        panelFormLayout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {form, jPanel4});
 
-        main.add(panelForm, "card3");
+        main.add(panelForm, java.awt.BorderLayout.CENTER);
 
-        add(main, new java.awt.GridBagConstraints());
+        add(main, java.awt.BorderLayout.PAGE_START);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnNewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnNewActionPerformed
@@ -990,6 +1002,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
 
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         clearAll();
+        btnNew.setEnabled(true);
         this.showForms(false, true);
     }//GEN-LAST:event_btnCancelActionPerformed
 
@@ -1044,7 +1057,6 @@ public class TrabajadoresView extends javax.swing.JPanel {
     private javax.swing.JButton btnExport;
     private javax.swing.JButton btnNew;
     private javax.swing.JButton btnSave;
-    private javax.swing.JPanel btns;
     private javax.swing.JCheckBox cbFriday;
     private javax.swing.JCheckBox cbMonday;
     private javax.swing.JCheckBox cbSaturday;
@@ -1066,6 +1078,7 @@ public class TrabajadoresView extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel17;
+    private javax.swing.JLabel jLabel18;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel3;
@@ -1076,7 +1089,6 @@ public class TrabajadoresView extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JToolBar jToolBar1;

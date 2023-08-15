@@ -29,7 +29,7 @@ public class Job implements Serializable {
     @Column(name = "sueldo_diario")
     private float sueldoDiario;
     @Column(name = "dias_laborales")
-    private boolean[] diasLaborales;
+    private int[] diasLaborales;
     @Column(name = "total_diasLaborales")
     @Basic(optional = false)
     private int totalDiasLaborales;
@@ -37,7 +37,7 @@ public class Job implements Serializable {
     public Job() {
     }
 
-    public Job(Long id, String puesto, float sueldoDiario, boolean[] diasLaborales, int totalDiasLaborales) {
+    public Job(Long id, String puesto, float sueldoDiario, int[] diasLaborales, int totalDiasLaborales) {
         this.id = id;
         this.puesto = puesto;
         this.sueldoDiario = sueldoDiario;
@@ -45,13 +45,15 @@ public class Job implements Serializable {
         this.totalDiasLaborales = totalDiasLaborales;
     }
 
-    public boolean[] getDiasLaborales() {
+    public int[] getDiasLaborales() {
         return diasLaborales;
     }
 
-    public void setDiasLaborales(boolean[] diasLaborales) {
+    public void setDiasLaborales(int[] diasLaborales) {
         this.diasLaborales = diasLaborales;
     }
+
+    
 
     public String getPuesto() {
         return puesto;

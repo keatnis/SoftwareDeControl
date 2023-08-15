@@ -2,10 +2,13 @@ package com.view;
 
 import com.dao.LugarTrabajoDAO;
 import com.model.Workplace;
+import com.utils.ExportExcel;
 import com.utils.Filter;
 import com.utils.Validaciones;
 import com.utils.table.RenderTable;
+import java.io.IOException;
 import java.util.List;
+import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
@@ -105,7 +108,7 @@ public class LugarTrabajo extends javax.swing.JPanel {
         int row = tblLugarTrabajo.getSelectedRow();
 
         btnSave.setText("actualizar datos");
-        btnNew.repaint();
+        btnSave.repaint();
 
         txtClave.setText(String.valueOf(tblLugarTrabajo.getValueAt(tblLugarTrabajo.getSelectedRow(), 1)));
         txtNombreObra.setText(String.valueOf(tblLugarTrabajo.getValueAt(tblLugarTrabajo.getSelectedRow(), 2)));
@@ -114,7 +117,7 @@ public class LugarTrabajo extends javax.swing.JPanel {
                 tblLugarTrabajo.getValueAt(tblLugarTrabajo.getSelectedRow(), 4))));
         dateEnd.setDate(Validaciones.returnDate(
                 String.valueOf(
-                tblLugarTrabajo.getValueAt(tblLugarTrabajo.getSelectedRow(), 5))));
+                tblLugarTrabajo.getValueAt(row, 5))));
     }
 
     private void clearAll() {
@@ -157,6 +160,8 @@ public class LugarTrabajo extends javax.swing.JPanel {
         btnNew = new javax.swing.JButton();
         btnEditar = new javax.swing.JButton();
         btnDelete = new javax.swing.JButton();
+        jLabel4 = new javax.swing.JLabel();
+        btnExport = new javax.swing.JButton();
         panelForm = new javax.swing.JPanel();
         jPanel4 = new javax.swing.JPanel();
         lbClave = new javax.swing.JLabel();
@@ -174,6 +179,7 @@ public class LugarTrabajo extends javax.swing.JPanel {
 
         setLayout(new java.awt.CardLayout());
 
+        panelList.setMaximumSize(null);
         panelList.setLayout(new java.awt.GridBagLayout());
 
         txtSearch.setPlaceholder("Buscar ...");
@@ -196,9 +202,12 @@ public class LugarTrabajo extends javax.swing.JPanel {
             }
         ));
         tblLugarTrabajo.setFocusable(false);
+        tblLugarTrabajo.setShowHorizontalLines(true);
+        tblLugarTrabajo.setShowVerticalLines(true);
         jScrollPane1.setViewportView(tblLugarTrabajo);
 
-        jPanel3.setLayout(new java.awt.GridLayout(3, 0, 0, 4));
+        jPanel3.setBorder(javax.swing.BorderFactory.createTitledBorder("Opciones"));
+        jPanel3.setLayout(new java.awt.GridLayout(5, 0, 0, 4));
 
         btnNew.setText("Nuevo");
         btnNew.addActionListener(new java.awt.event.ActionListener() {
@@ -223,38 +232,51 @@ public class LugarTrabajo extends javax.swing.JPanel {
             }
         });
         jPanel3.add(btnDelete);
+        jPanel3.add(jLabel4);
+
+        btnExport.setText("exportar");
+        btnExport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExportActionPerformed(evt);
+            }
+        });
+        jPanel3.add(btnExport);
 
         javax.swing.GroupLayout panekLayout = new javax.swing.GroupLayout(panek);
         panek.setLayout(panekLayout);
         panekLayout.setHorizontalGroup(
             panekLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 1005, Short.MAX_VALUE)
             .addGroup(panekLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(panekLayout.createSequentialGroup()
                     .addGap(0, 0, Short.MAX_VALUE)
                     .addGroup(panekLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGroup(panekLayout.createSequentialGroup()
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 722, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGap(6, 6, 6)
-                            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 886, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGap(17, 17, 17)))
         );
         panekLayout.setVerticalGroup(
             panekLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(0, 415, Short.MAX_VALUE)
             .addGroup(panekLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(panekLayout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
+                    .addGap(0, 3, Short.MAX_VALUE)
                     .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGap(12, 12, 12)
                     .addGroup(panekLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 339, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 92, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGap(0, 0, Short.MAX_VALUE)))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 368, Short.MAX_VALUE)
+                        .addGroup(panekLayout.createSequentialGroup()
+                            .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 177, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGap(0, 0, Short.MAX_VALUE)))))
         );
 
-        panelList.add(panek, new java.awt.GridBagConstraints());
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.FIRST_LINE_START;
+        panelList.add(panek, gridBagConstraints);
 
         add(panelList, "card2");
 
@@ -325,7 +347,7 @@ public class LugarTrabajo extends javax.swing.JPanel {
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
-                .addContainerGap(24, Short.MAX_VALUE)
+                .addContainerGap(29, Short.MAX_VALUE)
                 .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(lbClave)
                     .addComponent(txtClave, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -410,11 +432,20 @@ public class LugarTrabajo extends javax.swing.JPanel {
       Filter.searchInTable(txtSearch, tblLugarTrabajo);
     }//GEN-LAST:event_txtSearchKeyTyped
 
+    private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
+        try {
+            ExportExcel.exportarExcel(tblLugarTrabajo);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, ex.getMessage());
+        }
+    }//GEN-LAST:event_btnExportActionPerformed
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnDelete;
     private javax.swing.JButton btnEditar;
+    private javax.swing.JButton btnExport;
     private javax.swing.JButton btnNew;
     private javax.swing.JButton btnSave;
     private com.toedter.calendar.JDateChooser dateEnd;
@@ -422,6 +453,7 @@ public class LugarTrabajo extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JScrollPane jScrollPane1;

@@ -4,9 +4,7 @@ import com.controller.OperadorJpaController;
 import com.controller.ServicioJpaController;
 import com.model.Flete;
 import com.model.Servicio;
-import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.TypedQuery;
 
 /**
  *

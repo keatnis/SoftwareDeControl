@@ -4,8 +4,6 @@ import com.controller.NominaJpaController;
 import com.controller.exceptions.NonexistentEntityException;
 import com.model.Nomina;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.swing.JOptionPane;
@@ -27,6 +25,10 @@ public class NominaDAO {
         nominaJpaController.create(nomina);
     }
 
+    public void saveAll(Nomina nomina) {
+        nominaJpaController.createAll(nomina);
+    }
+
     public void delete(Integer id) {
         try {
             nominaJpaController.destroy(id);
@@ -46,10 +48,11 @@ public class NominaDAO {
 
     }
 
-    public List<Nomina> getLastPayDate(int id) {
+    public Object getLastPayDate(int id) {
         return nominaJpaController.getNominaById(id);
     }
-    public Double getTotalPrestanos(Integer id,String startDate,String endDate){
+
+    public Double getTotalPrestanos(Integer id, String startDate, String endDate) {
         return nominaJpaController.getTotalPrestamosBetweenDates(id, startDate, endDate);
     }
 }

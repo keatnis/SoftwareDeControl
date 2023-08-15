@@ -51,7 +51,7 @@ public class DetallesCombustible extends javax.swing.JDialog {
     private void showData(JTable table) {
         Filter.removeAllRows(table);
         Object[] titles = new Object[]{
-            "ID", "TIPO COMBUSTIBLE", "PECIO X LITRO"
+            "ID", "TIPO COMBUSTIBLE", "PRECIO X LITRO"
         };
 
         DefaultTableModel model = new DefaultTableModel(null, titles) {

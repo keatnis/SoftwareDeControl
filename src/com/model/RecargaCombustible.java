@@ -1,6 +1,7 @@
 package com.model;
 
 import java.io.Serializable;
+import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -12,6 +13,9 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import jdk.jfr.ContentType;
 
 /**
  *
@@ -55,13 +59,18 @@ public class RecargaCombustible implements Serializable {
     @Basic(optional = false)
     @Column(name = "tipo_pago")
     private String tipoPago;
+    @Basic(optional = false)
+    @Column(name = "fecha_recarga")
+    @Temporal(TemporalType.DATE)
+    private Date fechaRecarga;
+    
     @ManyToOne()
     @JoinColumn(name = "detalle_combustible_id")
     private DetalleCombustible detalleCompustible;
 //    @ManyToOne()
 //    @JoinColumn(name = "asignacion_unidad_id")
 //    private AsignacionUnidad asignacionUnidad;
-    
+
     public RecargaCombustible() {
     }
 
@@ -69,7 +78,7 @@ public class RecargaCombustible implements Serializable {
         this.id = id;
     }
 
-    public RecargaCombustible(Integer id, Float odometroActual, String tipoCombustible, float precioxlitro, float litros, Float monto, String gasolinera, String tipoPago, DetalleCombustible detalleCompustible) {
+    public RecargaCombustible(Integer id, Float odometroActual, String tipoCombustible, float precioxlitro, float litros, Float monto, String gasolinera, String tipoPago, Date fechaRecarga, DetalleCombustible detalleCompustible) {
         this.id = id;
         this.odometroActual = odometroActual;
         this.tipoCombustible = tipoCombustible;
@@ -78,32 +87,24 @@ public class RecargaCombustible implements Serializable {
         this.monto = monto;
         this.gasolinera = gasolinera;
         this.tipoPago = tipoPago;
+        this.fechaRecarga = fechaRecarga;
         this.detalleCompustible = detalleCompustible;
     }
 
-//    public RecargaCombustible(Integer id, Float odometroActual, String tipoCombustible, float precioxlitro, float litros, Float monto, String gasolinera, String tipoPago, DetalleCombustible detalleCompustible, AsignacionUnidad asignacionUnidad) {
-//        this.id = id;
-//        this.odometroActual = odometroActual;
-//        this.tipoCombustible = tipoCombustible;
-//        this.precioxlitro = precioxlitro;
-//        this.litros = litros;
-//        this.monto = monto;
-//        this.gasolinera = gasolinera;
-//        this.tipoPago = tipoPago;
-//        this.detalleCompustible = detalleCompustible;
-//        this.asignacionUnidad = asignacionUnidad;
-//        
-//    }
-//
-//   
-//    public AsignacionUnidad getAsignacionUnidad() {
-//        return asignacionUnidad;
-//    }
-//
-//    public void setAsignacionUnidad(AsignacionUnidad asignacionUnidad) {
-//        this.asignacionUnidad = asignacionUnidad;
-//    }
+    public Date getFechaRecarga() {
+        if (fechaRecarga != null) {
+            return fechaRecarga=new Date(fechaRecarga.getTime());
+        }else{
+           return fechaRecarga=null;
+        }
+        
+    }
 
+    public void setFechaRecarga(Date fechaRecarga) {
+        this.fechaRecarga = fechaRecarga;
+    }
+    
+  
     public DetalleCombustible getDetalleCompustible() {
         return detalleCompustible;
     }
@@ -111,18 +112,23 @@ public class RecargaCombustible implements Serializable {
     public void setDetalleCompustible(DetalleCombustible detalleCompustible) {
         this.detalleCompustible = detalleCompustible;
     }
-    public String getGasolinera(){
+
+    public String getGasolinera() {
         return gasolinera;
     }
-    public void setGasolinera(String gasolinera){
-         this.gasolinera=gasolinera;
+
+    public void setGasolinera(String gasolinera) {
+        this.gasolinera = gasolinera;
     }
-     public String getMetodoPago(){
+
+    public String getMetodoPago() {
         return tipoPago;
     }
-    public void setMetodoPago(String metodoPago){
-         this.tipoPago=metodoPago;
+
+    public void setMetodoPago(String metodoPago) {
+        this.tipoPago = metodoPago;
     }
+
     public Integer getId() {
         return id;
     }

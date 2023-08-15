@@ -1,6 +1,8 @@
 package com.model;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Date;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -40,12 +42,13 @@ public class AsignacionUnidad implements Serializable {
     private Integer id;
     @Basic(optional = false)
     @Column(name = "fecha_inicio")
-    @Temporal(TemporalType.DATE)
-    private Date fechaInicio;
+    // @Temporal(TemporalType.TIMESTAMP)
+    private LocalDateTime fechaInicio;
+
     @Basic(optional = false)
     @Column(name = "fecha_fin")
-    @Temporal(TemporalType.DATE)
-    private Date fechaFin;
+    // @Temporal(TemporalType.TIMESTAMP)
+    private LocalDateTime fechaFin;
     @Basic(optional = false)
     @Column(name = "km_inicio")
     private Float kmInicio;
@@ -55,6 +58,7 @@ public class AsignacionUnidad implements Serializable {
     @Basic(optional = false)
     @Column(name = "status")
     private String status;
+
     @ManyToOne()
     @JoinColumn(name = "operador_id")
     private Operador operador;
@@ -68,11 +72,7 @@ public class AsignacionUnidad implements Serializable {
     public AsignacionUnidad() {
     }
 
-    public AsignacionUnidad(Integer id) {
-        this.id = id;
-    }
-
-    public AsignacionUnidad(Integer id, Date fechaInicio, Date fechaFin, Float kmInicio, Float kmFinal, String status, Operador operador, Vehiculo vehiculo) {
+    public AsignacionUnidad(Integer id, LocalDateTime fechaInicio, LocalDateTime fechaFin, Float kmInicio, Float kmFinal, String status, Operador operador, Vehiculo vehiculo) {
         this.id = id;
         this.fechaInicio = fechaInicio;
         this.fechaFin = fechaFin;
@@ -83,24 +83,31 @@ public class AsignacionUnidad implements Serializable {
         this.vehiculo = vehiculo;
     }
 
-//    public AsignacionUnidad(Integer id, Date fechaInicio, Date fechaFin, Float kmInicio, Float kmFinal, String status, Vehiculo vehiculo, Integer operador_id) {
-//        this.id = id;
-//        this.fechaInicio = fechaInicio;
-//        this.fechaFin = fechaFin;
-//        this.kmInicio = kmInicio;
-//        this.kmFinal = kmFinal;
-//        this.status = status;
-//        this.vehiculo = vehiculo;
-//        this.operador_id = operador_id;
-//    }
-//
-//    public Integer getOperador_id() {
-//        return operador_id;
-//    }
-//
-//    public void setOperador_id(Integer operador_id) {
-//        this.operador_id = operador_id;
-//    }
+    public LocalDateTime getFechaInicio() {
+       
+        if (fechaInicio.toString().isBlank()) {
+            return fechaInicio = null;
+        } else {
+            return fechaInicio;
+        }
+
+    }
+
+    public void setFechaInicio(LocalDateTime fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+
+    public LocalDateTime getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(LocalDateTime fechaFin) {
+        this.fechaFin = fechaFin;
+    }
+
+    public AsignacionUnidad(Integer id) {
+        this.id = id;
+    }
 
     public Operador getOperador() {
         return operador;
@@ -124,30 +131,6 @@ public class AsignacionUnidad implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
-    }
-
-    public Date getFechaInicio() {
-          if (this.fechaInicio != null) {
-            return new java.sql.Date(this.fechaInicio.getTime());
-        } else {
-            return this.fechaInicio = null;
-        }
-    }
-
-    public void setFechaInicio(Date fechaInicio) {
-        this.fechaInicio = fechaInicio;
-    }
-
-    public Date getFechaFin() {
-            if (this.fechaFin != null) {
-            return new java.sql.Date(this.fechaFin.getTime());
-        } else {
-            return this.fechaFin = null;
-        }
-    }
-
-    public void setFechaFin(Date fechaFin) {
-        this.fechaFin = fechaFin;
     }
 
     public float getKmInicio() {

@@ -36,7 +36,7 @@ public class PrestamoJpaController implements Serializable {
             em.getTransaction().begin();
             em.persist(prestamo);
             em.getTransaction().commit();
-            JOptionPane.showMessageDialog(null, "prestamo registrado");
+            JOptionPane.showMessageDialog(null, "Prestamo registrado");
         } finally {
             if (em != null) {
                 em.close();
@@ -51,7 +51,7 @@ public class PrestamoJpaController implements Serializable {
             em.getTransaction().begin();
             prestamo = em.merge(prestamo);
             em.getTransaction().commit();
-            JOptionPane.showMessageDialog(null, "prestamo editado");
+            JOptionPane.showMessageDialog(null, "Prestamo editado");
         } catch (Exception ex) {
             String msg = ex.getLocalizedMessage();
             if (msg == null || msg.length() == 0) {
@@ -82,7 +82,7 @@ public class PrestamoJpaController implements Serializable {
             }
             em.remove(prestamo);
             em.getTransaction().commit();
-            JOptionPane.showMessageDialog(null, "prestamo eliminado");
+            JOptionPane.showMessageDialog(null, "Prestamo eliminado");
         } finally {
             if (em != null) {
                 em.close();

@@ -18,9 +18,16 @@ import com.utils.ExportExcel;
 import com.utils.Filter;
 import com.utils.Validaciones;
 import com.utils.table.RenderStatus;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -35,7 +42,6 @@ public class FleteView extends javax.swing.JPanel {
 
     private Vehiculo vehiculo;
     private Operador operador;
-    private Operador responsableCarga;
     private Workplace workplace;
 
     private DetalleCombustible detalleCombustible;
@@ -47,9 +53,10 @@ public class FleteView extends javax.swing.JPanel {
     private Flete flete;
     //  private LugarTrabajo lugarTrabajo;
     private RecargaCombustible recargaCombustible;
-
+    private float KM_VEHICULO;
     private FleteDAO fleteDAO;
-
+    private Float KM_actual;
+//EEE MMM dd HH:mm:ss z yyyy
     public FleteView() {
         initComponents();
         this.detalleCombustibleDAO = new DetalleCombustibleDAO();
@@ -62,13 +69,13 @@ public class FleteView extends javax.swing.JPanel {
         this.showData(tblFlete);
 
         getTipoCombustible();
-
+        this.cmbTipoCompustible.setSelectedIndex(0);
         getWorkplaces();
 
     }
 
     /*
-    Puede cambiar los colores del status en com.utils.table.RenderStatus
+        Puede cambiar los colores del status en com.utils.table.RenderStatus
      */
     public void showData(JTable table) {
         Filter.removeAllRows(table);
@@ -76,7 +83,7 @@ public class FleteView extends javax.swing.JPanel {
         Object[] titles = new Object[]{
             "ID FLETE", "OPERADOR", "VEHICULO", "LUGAR TRABAJO", "CONCEPTO FLETE",
             "SALIDA", "RECIBE", "FECHA INICIO", "FECHA FIN", "STATUS", "KM INICIAL", "KM FINAL",
-            "ID ASIG.", "ID lUGAR TRABAJO", "ID OPERADOR", "ID VEHICULO", "ID RESPONSABLE", "RESPONSABLE CARGA",
+            "ID ASIG.", "ID lUGAR TRABAJO", "ID OPERADOR", "ID VEHICULO", "RESPONSABLE CARGA",
             "ODOMETRO ACTUAL", "PRECIOXLITRO", "LITROS", "TIPO COMB.", "MONTO", "GASOLINERA", "TIPO DE PAGO", "ID RECARGA"};
         /*coloco el nombre de las  columnas de la tabla USER a el modelo */
         DefaultTableModel model = new DefaultTableModel(null, titles) {
@@ -114,7 +121,6 @@ public class FleteView extends javax.swing.JPanel {
                 flete.getAsignacionUnidad().getOperador().getId(),
                 flete.getAsignacionUnidad().getVehiculo().getId(),
                 flete.getResponsable(),
-                flete.getResponsable(),
                 flete.getRecargaCombustible().getOdometroActual(),
                 flete.getRecargaCombustible().getPrecioxlitro(),
                 flete.getRecargaCombustible().getLitros(),
@@ -135,12 +141,12 @@ public class FleteView extends javax.swing.JPanel {
         table.doLayout();
         /* asignamos el ancho de cada columna de la tabla*/
 
-        int[] anchos = {80, 200, 300, 300, 150, 200, 150, 80, 200, 150, 150, 150,
-            0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100};
+        int[] anchos = {80, 200, 300, 300, 200, 200, 200, 200, 200, 150, 150, 150,
+            0, 0, 0, 0, 100, 100, 100, 100, 100, 100, 100, 100, 100};
         for (int i = 0; i < table.getColumnCount(); i++) {
             table.getColumnModel().getColumn(i).setPreferredWidth(anchos[i]);
         }
-        this.hideColumns(table, new int[]{12, 13, 14, 15, 25});
+        this.hideColumns(table, new int[]{12, 13, 14, 15, 24});
 
     }
 
@@ -153,8 +159,57 @@ public class FleteView extends javax.swing.JPanel {
         }
     }
 
-    private void save() {
+    private String parse12hTo24h(String time) {
+        String result = null;
+        if (!time.isEmpty()) {
+            result
+                    = // Text representing the value of our date-time object.
+                    LocalTime.parse( // Class representing a time-of-day value without a date and without a time zone.
+                            time, // Your `String` input text.
+                            DateTimeFormatter.ofPattern( // Define a formatting pattern to match your input text.
+                                    "hh:mm a",
+                                    Locale.US // `Locale` determines the human language and cultural norms used in localization. Needed here to translate the `AM` & `PM` value.
+                            ) // Returns a `DateTimeFormatter` object.
+                    ) // Return a `LocalTime` object.
+                            .format(DateTimeFormatter.ofPattern("HH:mm"));
+//LocalTime.parse(result)
+        }
 
+        return result;
+    }
+
+    private LocalTime parse24hTo12h(String time) {
+        //   time = Hora1.getText().substring(0, 5);
+
+        //  String HoraFinal = Hora2.getText().substring(0, 5);
+        // LocalTime hourStart = LocalTime.parse(horaInicio);
+        String result
+                = // Text representing the value of our date-time object.
+                LocalTime.parse( // Class representing a time-of-day value without a date and without a time zone.
+                        time, // Your `String` input text.
+                        DateTimeFormatter.ofPattern( // Define a formatting pattern to match your input text.
+                                "hh:mm",
+                                Locale.US // `Locale` determines the human language and cultural norms used in localization. Needed here to translate the `AM` & `PM` value.
+                        ) // Returns a `DateTimeFormatter` object.
+                ) // Return a `LocalTime` object.
+                        .format(DateTimeFormatter.ofPattern("HH:mm a"));
+
+        return LocalTime.parse(result);
+    }
+
+    private void validateForm() {
+        // operador
+        //actualizar el km del vehiculo
+        Validaciones.cmbEditorNoSelected(cmbOperador,
+                "No ha seleccionado el operador, introduzca los datos en el campo y luego pulse el boton buscar para buscar en la base de datos.");
+        Validaciones.cmbEditorNoSelected(cmbVehiculo,
+                "No ha introducido los datos del vehiculo. Favor de introducirlos.");
+        Validaciones.dateNoSeleted(fechaRecarga, "Fecha de recarga");
+        Validaciones.esCajaVacia(txtLitrosCargados, "Introduzca los litros cargados, en caso de que no se ha cargado debe de ponder el valor 0");
+    }
+
+    private void save() {
+        validateForm();
         flete = new Flete();
         asignacionUnidad = new AsignacionUnidad();
         vehiculo = new Vehiculo();
@@ -169,33 +224,30 @@ public class FleteView extends javax.swing.JPanel {
         operadorID = null;
         asignacionUnidad.setVehiculo(vehiculo);
         asignacionUnidad.setOperador(operador);
-        // asignacionUnidad.setOperador_id(this.operador.getId());
 
-        Date da = startDate.getDate();
-        asignacionUnidad.setFechaInicio(
-                da
-        );
-        asignacionUnidad.setFechaFin(endDate.getDate());
+        String horaInicio = this.parse12hTo24h(Hora1.getText());
+        String horaFinal = this.parse12hTo24h(Hora2.getText());
 
+        asignacionUnidad.setFechaInicio(Validaciones.dateTimeReturn(startDate, horaInicio, "Inicio"));
+        asignacionUnidad.setFechaFin(Validaciones.dateTimeReturn(endDate, horaFinal, "Final/Termino"));
         asignacionUnidad.setKmInicio(Float.parseFloat(txtKMIncicial.getText()));
         asignacionUnidad.setKmFinal(Float.parseFloat(txtKMFinal.getText()));
-        //LocalDateTime.of(2015, Month.FEBRUARY, 20, 06, 30); datatime
-        // flete.setAsignacionUnidad(asignacionUnidad);
+
         recargaCombustible = new RecargaCombustible();
         recargaCombustible.setOdometroActual(Float.parseFloat(txtOdometroActual.getText()));
         recargaCombustible.setPrecioxlitro(detalleCombustible.getPrecio());
         recargaCombustible.setLitros(Float.parseFloat(txtLitrosCargados.getText()));
         recargaCombustible.setTipoCombustible(detalleCombustible.getTipo());
         recargaCombustible.setMonto(Float.parseFloat(txtMonto.getText()));
-        recargaCombustible.setGasolinera(cmbGasolinera.getSelectedItem().toString());
+        recargaCombustible.setGasolinera(cmbGasolinera.getEditor().getItem().toString());
+        recargaCombustible.setFechaRecarga(fechaRecarga.getDate());
         if (!rbEfectivo.isSelected() && !rbTransferencia.isSelected()) {
             JOptionPane.showMessageDialog(null, "no ha seleccionado el tipo de pago");
+            return;
         } else if (rbEfectivo.isSelected()) {
             recargaCombustible.setMetodoPago(rbEfectivo.getText());
         } else if (rbTransferencia.isSelected()) {
             recargaCombustible.setMetodoPago(rbTransferencia.getText());
-        } else {
-            return;
         }
 
         // recargaCombustible.setAsignacionUnidad(asignacionUnidad);
@@ -210,12 +262,20 @@ public class FleteView extends javax.swing.JPanel {
         flete.setConcepto(txtConcepto.getText());
         flete.setRecibe((String) cmbRecibe.getSelectedItem());
         flete.setStatus((String) cmbStatusFlete.getSelectedItem());
-        //  responsableCarga = new Operador();
-        //    String[] responsableID = cmbResponsableCarga.getSelectedItem().toString();
-        //responsableCarga.setId(Integer.parseInt(responsableID[0]));
-        //  responsableID=null;
-        flete.setResponsable(cmbResponsableCarga.getSelectedItem().toString());
+        flete.setResponsable(cmbResponsableCarga.getEditor().getItem().toString());
         fleteDAO.saveFlete(flete, recargaCombustible, asignacionUnidad);
+
+        this.showData(tblFlete);
+        this.showForms(false, true);
+        if (!txtKMFinal.getText().equals("0") && KM_actual < Float.valueOf(txtKMIncicial.getText())) {
+            vehiculoDao.updateKM(vehiculo.getId(), Float.valueOf(txtKMIncicial.getText()));
+        } else if (!txtKMFinal.equals("0") && KM_actual < Float.valueOf(txtKMFinal.getText())) {
+            vehiculoDao.updateKM(vehiculo.getId(), Float.valueOf(txtKMFinal.getText()));
+        } else {
+            JOptionPane.showMessageDialog(null,
+                    "no se actualizo el Kilometraje del vehiculo, puede actualizar los datos usando la opcion editar desde el listado de los datos");
+        }
+
     }
 
     private void update() {
@@ -233,7 +293,7 @@ public class FleteView extends javax.swing.JPanel {
         int row = tblFlete.getSelectedRow();
 
         txtConcepto.setText(String.valueOf(tblFlete.getValueAt(row, 4)));
-        txtHora.setText("0000");
+        Hora1.setText("0000");
         txtKMFinal.setText(String.valueOf(tblFlete.getValueAt(row, 11)));
         txtKMIncicial.setText(String.valueOf(tblFlete.getValueAt(row, 10)));
         txtLitrosCargados.setText(String.valueOf(tblFlete.getValueAt(row, 20)));
@@ -275,13 +335,36 @@ public class FleteView extends javax.swing.JPanel {
 
             this.cmbTipoCompustible.addItem(vehiculol.getTipo());
 
+        }
+
+        cmbTipoCompustible.repaint();
+        if (ve.size() == 1) {
+            cmbTipoCompustible.setSelectedIndex(0);
+            detalleCombustible = new DetalleCombustible();
+            detalleCombustible.setId(ve.get(cmbTipoCompustible.getSelectedIndex()).getId());
+            detalleCombustible.setPrecio(ve.get(cmbTipoCompustible.getSelectedIndex()).getPrecio());
+
+            detalleCombustible.setTipo(ve.get(cmbTipoCompustible.getSelectedIndex()).getTipo());
+        } else {
+            cmbTipoCompustible.setSelectedIndex(0);
             detalleCombustible = new DetalleCombustible();
             detalleCombustible.setId(ve.get(cmbTipoCompustible.getSelectedIndex()).getId());
             detalleCombustible.setPrecio(ve.get(cmbTipoCompustible.getSelectedIndex()).getPrecio());
             detalleCombustible.setTipo(ve.get(cmbTipoCompustible.getSelectedIndex()).getTipo());
-
         }
-        this.cmbTipoCompustible.repaint();
+
+        cmbTipoCompustible.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent ie) {
+                detalleCombustible = new DetalleCombustible();
+                detalleCombustible.setId(ve.get(cmbTipoCompustible.getSelectedIndex()).getId());
+                detalleCombustible.setPrecio(ve.get(cmbTipoCompustible.getSelectedIndex()).getPrecio());
+                detalleCombustible.setTipo(ve.get(cmbTipoCompustible.getSelectedIndex()).getTipo());
+
+            }
+        });
+
+        cmbTipoCompustible.repaint();
 
     }
 
@@ -303,27 +386,53 @@ public class FleteView extends javax.swing.JPanel {
 
     private void getVehiculo() {
         String res = (String) this.cmbVehiculo.getEditor().getItem();
-        this.cmbVehiculo.removeAllItems();
+        if (!res.isEmpty()) {
+            this.cmbVehiculo.removeAllItems();
 
-        List<Vehiculo> ve = vehiculoDao.getByKey(res);
+            List<Vehiculo> ve = vehiculoDao.getByKey(res);
 
-        for (Vehiculo vehiculol : ve) {
+            for (Vehiculo vehiculol : ve) {
 
-            cmbVehiculo.addItem(vehiculol.getId() + " " + " MARCA: " + vehiculol.getMarca() + " MODELO: "
-                    + vehiculol.getModelo() + " NUM_SERIE: " + vehiculol.getDescripcion());
+                cmbVehiculo.addItem(vehiculol.getId() + " MARCA: " + vehiculol.getMarca() + " MODELO: "
+                        + vehiculol.getModelo() + " NUM_SERIE: " + vehiculol.getDescripcion());
 
+            }
+            vehiculo = new Vehiculo();
+            this.cmbVehiculo.repaint();
+            if (ve.size() == 1) {
+                cmbVehiculo.setSelectedIndex(0);
+
+                vehiculo.setId(ve.get(0).getId());
+                vehiculo.setTipoCombustible(ve.get(0).getTipoCombustible());
+                String kmactual = String.valueOf(ve.get(0).getKmActual());
+                KM_actual = Float.parseFloat(kmactual);
+                txtKMIncicial.setText(kmactual);
+            } else {
+                vehiculo.setId(ve.get(cmbVehiculo.getSelectedIndex()).getId());
+                vehiculo.setTipoCombustible(ve.get(cmbVehiculo.getSelectedIndex()).getTipoCombustible());
+                txtKMIncicial.setText(String.valueOf(ve.get(cmbVehiculo.getSelectedIndex()).getKmActual()));
+            }
+
+            cmbVehiculo.setPopupVisible(true);
+
+            cmbVehiculo.addItemListener(new java.awt.event.ItemListener() {
+                @Override
+                public void itemStateChanged(java.awt.event.ItemEvent evt) {
+
+                    vehiculo.setId(ve.get(cmbVehiculo.getSelectedIndex()).getId());
+                    vehiculo.setTipoCombustible(ve.get(cmbVehiculo.getSelectedIndex()).getTipoCombustible());
+                    txtKMIncicial.setText(String.valueOf(ve.get(cmbVehiculo.getSelectedIndex()).getKmActual()));
+                }
+            }
+            );
+
+        } else {
+            this.cmbOperador.removeAllItems();
+            JOptionPane.showMessageDialog(null,
+                    "Introduzca los datos del vehiculo ");
+            return;
         }
-        this.cmbVehiculo.setSelectedIndex(0);
-        this.cmbVehiculo.repaint();
-        cmbVehiculo.setPopupVisible(true);
-//        vehiculo = new Vehiculo();
-//
-//        cmbVehiculo.addItemListener((java.awt.event.ItemEvent evt) -> {
-//
-//            vehiculo.setId(ve.get(cmbVehiculo.getSelectedIndex()).getId());
-//            vehiculo.setTipoCombustible(ve.get(cmbVehiculo.getSelectedIndex()).getTipoCombustible());
-//            txtKMIncicial.setText(String.valueOf(ve.get(cmbVehiculo.getSelectedIndex()).getKmActual()));
-//        });
+
     }
 
     private void deleteAction() {
@@ -331,28 +440,39 @@ public class FleteView extends javax.swing.JPanel {
     }
 
     private void searchOperador() {
-        this.cmbOperador.removeAllItems();
-
         String res = (String) this.cmbOperador.getEditor().getItem();
-        List<Operador> ve = trabajadoresDAO.searchOperador(res);
+        if (!res.isEmpty()) {
+            this.cmbOperador.removeAllItems();
 
-        for (Operador operadorl : ve) {
+            List<Operador> ve = trabajadoresDAO.searchOperador(res);
 
-            this.cmbOperador.addItem(operadorl.getId() + " " + operadorl.getNombre() + " " + operadorl.getApePaterno() + " " + operadorl.getApeMaterno());
+            for (Operador operadorl : ve) {
 
-        }
-        this.cmbOperador.setSelectedIndex(0);
-        this.cmbOperador.repaint();
-        cmbOperador.setPopupVisible(true);
-//        operador = new Operador();
-//        this.cmbOperador.addItemListener(new java.awt.event.ItemListener() {
-//            @Override
-//            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-//                System.out.println(ve.get(cmbOperador.getSelectedIndex()).getId());
-//                operador.setId(ve.get(cmbOperador.getSelectedIndex()).getId());
+                this.cmbOperador.addItem(operadorl.getId() + " " + operadorl.getNombre() + " " + operadorl.getApePaterno() + " " + operadorl.getApeMaterno());
+
+            }
+            this.cmbOperador.repaint();
+            cmbOperador.setPopupVisible(true);
+            operador = new Operador();
+//            if (ve.size()==1) {
+//                
 //            }
-//
-//        });
+//            this.cmbOperador.addItemListener(new java.awt.event.ItemListener() {
+//                @Override
+//                public void itemStateChanged(java.awt.event.ItemEvent evt) {
+//                    
+//                    txtKMIncicial.setText(ve.get(cmbOperador.getSelectedIndex()).);
+//                    operador.setId(ve.get(cmbOperador.getSelectedIndex()).getId());
+//                }
+
+         //   });
+        } else {
+            this.cmbOperador.removeAllItems();
+            JOptionPane.showMessageDialog(null,
+                    "Introduzca los datos del operador nombre y/o apellido, de clic en buscar y seleccione los datos del operador.");
+            return;
+        }
+
     }
 
     @SuppressWarnings("unchecked")
@@ -368,7 +488,7 @@ public class FleteView extends javax.swing.JPanel {
         jLabel9 = new javax.swing.JLabel();
         cmbVehiculo = new javax.swing.JComboBox<>();
         cmbOperador = new javax.swing.JComboBox<>();
-        jButton1 = new javax.swing.JButton();
+        btnSearchVehicle = new javax.swing.JButton();
         btnOperador = new javax.swing.JButton();
         jLabel10 = new javax.swing.JLabel();
         jLabel13 = new javax.swing.JLabel();
@@ -379,7 +499,10 @@ public class FleteView extends javax.swing.JPanel {
         jLabel16 = new javax.swing.JLabel();
         endDate = new com.toedter.calendar.JDateChooser();
         startDate = new com.toedter.calendar.JDateChooser();
-        txtHora = new javax.swing.JFormattedTextField();
+        Hora1 = new com.utils.components.TimeChooser();
+        Hora2 = new com.utils.components.TimeChooser();
+        jLabel22 = new javax.swing.JLabel();
+        jLabel23 = new javax.swing.JLabel();
         combustible = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         cmbGasolinera = new javax.swing.JComboBox<>();
@@ -434,20 +557,22 @@ public class FleteView extends javax.swing.JPanel {
         lbTerminado = new javax.swing.JLabel();
         lbBloqueado = new javax.swing.JLabel();
 
+        setLayout(new java.awt.BorderLayout());
+
         panelForm.setToolTipText("");
         panelForm.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
         panelForm2.setLayout(new javax.swing.BoxLayout(panelForm2, javax.swing.BoxLayout.Y_AXIS));
 
-        asignacion.setBorder(javax.swing.BorderFactory.createTitledBorder("Asignacion Uidad"));
+        asignacion.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Asignacion Unidad", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Cantarell", 1, 18))); // NOI18N
         asignacion.setToolTipText("");
+        asignacion.setFont(new java.awt.Font("Cantarell", 1, 18)); // NOI18N
 
         jLabel4.setText("Vehiculo/Unidad");
 
         jLabel9.setText("Operador");
 
         cmbVehiculo.setEditable(true);
-        cmbVehiculo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", " " }));
         cmbVehiculo.setToolTipText("Puede buscar por modelo, marca o por numero de serie");
         cmbVehiculo.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseEntered(java.awt.event.MouseEvent evt) {
@@ -456,13 +581,12 @@ public class FleteView extends javax.swing.JPanel {
         });
 
         cmbOperador.setEditable(true);
-        cmbOperador.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", " " }));
         cmbOperador.setToolTipText("Buscar por nombre");
 
-        jButton1.setText("Buscar");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btnSearchVehicle.setText("Buscar");
+        btnSearchVehicle.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btnSearchVehicleActionPerformed(evt);
             }
         });
 
@@ -504,59 +628,77 @@ public class FleteView extends javax.swing.JPanel {
         startDate.setDateFormatString("dd/MM/yyyy");
         startDate.setMaximumSize(null);
 
-        try {
-            txtHora.setFormatterFactory(new javax.swing.text.DefaultFormatterFactory(new javax.swing.text.MaskFormatter("##:##")));
-        } catch (java.text.ParseException ex) {
-            ex.printStackTrace();
-        }
+        Hora1.setToolTipText("Horario de 12 h incluido AM / PM");
+        Hora1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                Hora1MouseClicked(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                Hora1MouseEntered(evt);
+            }
+        });
+
+        Hora2.setToolTipText("Horario de 12 h incluido AM / PM");
+        Hora2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                Hora2MouseClicked(evt);
+            }
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                Hora2MouseEntered(evt);
+            }
+        });
+
+        jLabel22.setText("Hora:");
+
+        jLabel23.setText("Hora:");
 
         javax.swing.GroupLayout asignacionLayout = new javax.swing.GroupLayout(asignacion);
         asignacion.setLayout(asignacionLayout);
         asignacionLayout.setHorizontalGroup(
             asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(asignacionLayout.createSequentialGroup()
+                .addGap(38, 38, 38)
                 .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel13, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel15, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addGap(18, 18, 18)
+                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel10)
                     .addGroup(asignacionLayout.createSequentialGroup()
                         .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addGroup(asignacionLayout.createSequentialGroup()
-                                .addGap(36, 36, 36)
-                                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jLabel9)
-                                    .addComponent(jLabel4))
-                                .addGap(18, 18, 18))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, asignacionLayout.createSequentialGroup()
-                                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(jLabel13)
-                                .addGap(16, 16, 16)))
-                        .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel10)
-                            .addGroup(asignacionLayout.createSequentialGroup()
-                                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(cmbVehiculo, javax.swing.GroupLayout.Alignment.LEADING, 0, 279, Short.MAX_VALUE)
-                                    .addComponent(cmbOperador, javax.swing.GroupLayout.Alignment.LEADING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jButton1)
-                                    .addComponent(btnOperador)))
-                            .addGroup(asignacionLayout.createSequentialGroup()
                                 .addGap(2, 2, 2)
-                                .addComponent(startDate, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(txtHora, javax.swing.GroupLayout.PREFERRED_SIZE, 66, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(39, 39, 39)
-                                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                    .addComponent(jLabel14)
-                                    .addComponent(jLabel16))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                                 .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(txtKMFinal, javax.swing.GroupLayout.PREFERRED_SIZE, 187, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(endDate, javax.swing.GroupLayout.PREFERRED_SIZE, 193, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                    .addGroup(asignacionLayout.createSequentialGroup()
-                        .addGap(81, 81, 81)
-                        .addComponent(jLabel15)
+                                    .addComponent(txtKMIncicial)
+                                    .addGroup(asignacionLayout.createSequentialGroup()
+                                        .addComponent(startDate, javax.swing.GroupLayout.PREFERRED_SIZE, 157, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(jLabel23)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(Hora1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                            .addComponent(cmbVehiculo, javax.swing.GroupLayout.PREFERRED_SIZE, 342, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(45, 45, 45)
+                        .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jLabel14)
+                            .addComponent(jLabel16)
+                            .addGroup(asignacionLayout.createSequentialGroup()
+                                .addComponent(btnSearchVehicle)
+                                .addGap(36, 36, 36)
+                                .addComponent(jLabel9)))
                         .addGap(18, 18, 18)
-                        .addComponent(txtKMIncicial, javax.swing.GroupLayout.PREFERRED_SIZE, 193, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(289, Short.MAX_VALUE))
+                        .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(txtKMFinal)
+                            .addGroup(asignacionLayout.createSequentialGroup()
+                                .addComponent(endDate, javax.swing.GroupLayout.PREFERRED_SIZE, 163, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jLabel22)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(Hora2, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(cmbOperador, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnOperador)))
+                .addContainerGap(625, Short.MAX_VALUE))
         );
         asignacionLayout.setVerticalGroup(
             asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -564,34 +706,38 @@ public class FleteView extends javax.swing.JPanel {
                 .addContainerGap()
                 .addComponent(jLabel10)
                 .addGap(2, 2, 2)
-                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel4)
                     .addComponent(cmbVehiculo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jButton1))
-                .addGap(18, 18, 18)
-                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnSearchVehicle)
                     .addComponent(jLabel9)
                     .addComponent(cmbOperador, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnOperador))
-                .addGap(21, 21, 21)
-                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                .addGap(31, 31, 31)
+                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel13)
                     .addComponent(startDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(txtHora, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel14)
-                    .addComponent(endDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(Hora1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel14)
+                        .addComponent(jLabel23))
+                    .addComponent(endDate, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(Hora2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel22)))
+                .addGap(10, 10, 10)
+                .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel15)
                     .addComponent(txtKMIncicial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel16)
-                    .addComponent(txtKMFinal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(27, 27, 27))
+                    .addGroup(asignacionLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(txtKMFinal, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jLabel16)))
+                .addGap(35, 35, 35))
         );
 
         panelForm2.add(asignacion);
 
-        combustible.setBorder(javax.swing.BorderFactory.createTitledBorder("Recarga de combustible"));
+        combustible.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Recarga de combustible", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Cantarell", 1, 18))); // NOI18N
         combustible.setToolTipText("");
 
         jLabel1.setText("Gasolinera");
@@ -623,6 +769,9 @@ public class FleteView extends javax.swing.JPanel {
             public void keyReleased(java.awt.event.KeyEvent evt) {
                 txtLitrosCargadosKeyReleased(evt);
             }
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtLitrosCargadosKeyTyped(evt);
+            }
         });
 
         txtMonto.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -651,77 +800,73 @@ public class FleteView extends javax.swing.JPanel {
         combustibleLayout.setHorizontalGroup(
             combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(combustibleLayout.createSequentialGroup()
-                .addGap(25, 25, 25)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel6)
-                    .addComponent(jLabel8))
-                .addGap(30, 30, 30)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(txtOdometroActual, javax.swing.GroupLayout.DEFAULT_SIZE, 218, Short.MAX_VALUE)
-                    .addComponent(txtLitrosCargados))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jLabel7)
-                .addGap(18, 18, 18)
-                .addComponent(txtMonto, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(357, Short.MAX_VALUE))
-            .addGroup(combustibleLayout.createSequentialGroup()
                 .addGap(9, 9, 9)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2)
-                    .addComponent(jLabel5))
+                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel2, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel5, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel7, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addGap(18, 18, 18)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, combustibleLayout.createSequentialGroup()
-                        .addComponent(cmbTipoCompustible, 0, 136, Short.MAX_VALUE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnDetalleCombustible))
-                    .addComponent(cmbGasolinera, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(fechaRecarga, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(fechaRecarga, javax.swing.GroupLayout.DEFAULT_SIZE, 346, Short.MAX_VALUE)
+                    .addComponent(cmbTipoCompustible, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(txtLitrosCargados)
+                    .addComponent(txtMonto))
+                .addGap(20, 20, 20)
+                .addComponent(btnDetalleCombustible)
+                .addGap(15, 15, 15)
+                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel8, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addGap(18, 18, 18)
-                .addComponent(jLabel3)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(rbEfectivo)
-                .addGap(41, 41, 41)
-                .addComponent(rbTransferencia)
-                .addContainerGap(172, Short.MAX_VALUE))
+                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(txtOdometroActual)
+                    .addGroup(combustibleLayout.createSequentialGroup()
+                        .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(rbEfectivo)
+                            .addComponent(rbTransferencia))
+                        .addGap(0, 169, Short.MAX_VALUE))
+                    .addComponent(cmbGasolinera, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(695, 695, 695))
         );
         combustibleLayout.setVerticalGroup(
             combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(combustibleLayout.createSequentialGroup()
-                .addGap(18, 18, 18)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(cmbGasolinera, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3)
-                    .addComponent(rbEfectivo)
+                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(combustibleLayout.createSequentialGroup()
+                        .addGap(15, 15, 15)
+                        .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(jLabel2)
+                            .addComponent(fechaRecarga, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel1)
+                            .addComponent(cmbGasolinera, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(58, 58, 58))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, combustibleLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(jLabel5)
+                            .addComponent(cmbTipoCompustible, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(btnDetalleCombustible)
+                            .addComponent(jLabel3)
+                            .addComponent(rbEfectivo))
+                        .addGap(18, 18, 18)))
+                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(jLabel6)
+                    .addComponent(txtLitrosCargados, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(rbTransferencia))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2)
-                    .addComponent(fechaRecarga, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(17, 17, 17)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(cmbTipoCompustible, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnDetalleCombustible))
-                .addGap(37, 37, 37)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGap(24, 24, 24)
+                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel7)
-                    .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(txtLitrosCargados, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel6)
-                        .addComponent(txtMonto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(combustibleLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtMonto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel8)
                     .addComponent(txtOdometroActual, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(29, 29, 29))
+                .addGap(66, 66, 66))
         );
 
         panelForm2.add(combustible);
 
-        detallesFlete.setBorder(javax.swing.BorderFactory.createTitledBorder("Detalle flete"));
+        detallesFlete.setBorder(javax.swing.BorderFactory.createTitledBorder(null, "Detalle flete", javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION, javax.swing.border.TitledBorder.DEFAULT_POSITION, new java.awt.Font("Cantarell", 1, 18))); // NOI18N
 
         jLabel11.setText("Lugar de trabajo");
 
@@ -741,7 +886,6 @@ public class FleteView extends javax.swing.JPanel {
         jLabel19.setText("Responsable de carga");
 
         cmbResponsableCarga.setEditable(true);
-        cmbResponsableCarga.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { " ", " " }));
         cmbResponsableCarga.setToolTipText("Buscar por nombre");
 
         cmbTrabajador.setText("Buscar");
@@ -767,29 +911,33 @@ public class FleteView extends javax.swing.JPanel {
         detallesFleteLayout.setHorizontalGroup(
             detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(detallesFleteLayout.createSequentialGroup()
-                .addGap(31, 31, 31)
-                .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel21)
-                    .addComponent(jLabel18)
-                    .addComponent(jLabel11))
+                .addGap(39, 39, 39)
+                .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel11, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel18, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel21, javax.swing.GroupLayout.Alignment.TRAILING))
                 .addGap(18, 18, 18)
                 .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(cmbLugarTrabajo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(cmbSalida, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 227, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
+                    .addComponent(cmbSalida, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(cmbLugarTrabajo, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 296, Short.MAX_VALUE))
+                .addGap(129, 129, 129)
                 .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addComponent(jLabel17)
                     .addComponent(jLabel19)
                     .addComponent(jLabel20))
                 .addGap(18, 18, 18)
-                .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(cmbStatusFlete, 0, 187, Short.MAX_VALUE)
-                    .addComponent(cmbResponsableCarga, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(cmbRecibe, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(18, 18, 18)
-                .addComponent(cmbTrabajador)
-                .addContainerGap(115, Short.MAX_VALUE))
+                .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(detallesFleteLayout.createSequentialGroup()
+                        .addComponent(cmbStatusFlete, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 87, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(detallesFleteLayout.createSequentialGroup()
+                        .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(cmbResponsableCarga, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(cmbRecibe, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(12, 12, 12)
+                        .addComponent(cmbTrabajador)))
+                .addGap(173, 173, 173))
         );
         detallesFleteLayout.setVerticalGroup(
             detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -797,36 +945,44 @@ public class FleteView extends javax.swing.JPanel {
                 .addGap(6, 6, 6)
                 .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel11)
-                    .addComponent(cmbLugarTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel17)
-                    .addComponent(cmbStatusFlete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(cmbLugarTrabajo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
                     .addComponent(jLabel18)
-                    .addComponent(cmbSalida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel19)
-                    .addComponent(cmbResponsableCarga, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cmbTrabajador))
+                    .addComponent(cmbSalida, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel21)
-                    .addComponent(jScrollPane1)
-                    .addComponent(jLabel20))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 108, Short.MAX_VALUE))
+                .addContainerGap(14, Short.MAX_VALUE))
             .addGroup(detallesFleteLayout.createSequentialGroup()
-                .addGap(86, 86, 86)
-                .addComponent(cmbRecibe, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(97, 97, 97))
+                .addContainerGap()
+                .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(detallesFleteLayout.createSequentialGroup()
+                        .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(jLabel17)
+                            .addComponent(cmbStatusFlete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                            .addComponent(jLabel19)
+                            .addComponent(cmbResponsableCarga, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(cmbTrabajador))
+                        .addGap(37, 37, 37))
+                    .addGroup(detallesFleteLayout.createSequentialGroup()
+                        .addGap(80, 80, 80)
+                        .addGroup(detallesFleteLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(cmbRecibe, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel20))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(detallesFlete, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addGap(0, 482, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -837,7 +993,7 @@ public class FleteView extends javax.swing.JPanel {
 
         panelForm2.add(jPanel1);
 
-        jPanel2.setLayout(new java.awt.GridLayout(1, 0));
+        jPanel2.setLayout(new java.awt.GridBagLayout());
 
         btnCancel.setText("Cancelar");
         btnCancel.addActionListener(new java.awt.event.ActionListener() {
@@ -845,7 +1001,7 @@ public class FleteView extends javax.swing.JPanel {
                 btnCancelActionPerformed(evt);
             }
         });
-        jPanel2.add(btnCancel);
+        jPanel2.add(btnCancel, new java.awt.GridBagConstraints());
 
         btnSave.setBackground(javax.swing.UIManager.getDefaults().getColor("Button.default.focusColor"));
         btnSave.setFont(new java.awt.Font("Cantarell", 1, 15)); // NOI18N
@@ -855,7 +1011,7 @@ public class FleteView extends javax.swing.JPanel {
                 btnSaveActionPerformed(evt);
             }
         });
-        jPanel2.add(btnSave);
+        jPanel2.add(btnSave, new java.awt.GridBagConstraints());
 
         panelForm2.add(jPanel2);
 
@@ -865,7 +1021,7 @@ public class FleteView extends javax.swing.JPanel {
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 977, Short.MAX_VALUE)
+            .addGap(0, 1801, Short.MAX_VALUE)
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -875,6 +1031,8 @@ public class FleteView extends javax.swing.JPanel {
         panelForm2.add(jPanel3);
 
         panelForm.setViewportView(panelForm2);
+
+        add(panelForm, java.awt.BorderLayout.CENTER);
 
         panelOptions.setBorder(javax.swing.BorderFactory.createTitledBorder("Opciones"));
         panelOptions.setLayout(new java.awt.GridLayout(1, 7, 0, 5));
@@ -920,6 +1078,7 @@ public class FleteView extends javax.swing.JPanel {
         });
         panelOptions.add(btnChangeStatus);
 
+        tblFlete.setAutoCreateRowSorter(true);
         tblFlete.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null},
@@ -931,6 +1090,7 @@ public class FleteView extends javax.swing.JPanel {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        tblFlete.setShowGrid(true);
         jScrollPane2.setViewportView(tblFlete);
 
         txtSearch.setPlaceholder("Buscar ...");
@@ -968,14 +1128,16 @@ public class FleteView extends javax.swing.JPanel {
         panelListLayout.setHorizontalGroup(
             panelListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(panelListLayout.createSequentialGroup()
-                .addComponent(panelOptions, javax.swing.GroupLayout.PREFERRED_SIZE, 846, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(panelListLayout.createSequentialGroup()
-                .addContainerGap()
+                .addGap(30, 30, 30)
                 .addGroup(panelListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(panelListLayout.createSequentialGroup()
+                        .addGroup(panelListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(panelListLayout.createSequentialGroup()
+                                .addComponent(panelOptions, javax.swing.GroupLayout.PREFERRED_SIZE, 846, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 297, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(35, 35, 35))
                     .addGroup(panelListLayout.createSequentialGroup()
                         .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(0, 0, Short.MAX_VALUE))))
@@ -993,45 +1155,11 @@ public class FleteView extends javax.swing.JPanel {
                 .addGap(0, 0, Short.MAX_VALUE))
         );
 
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
-        this.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(0, 87, Short.MAX_VALUE)
-                .addComponent(panelForm, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 87, Short.MAX_VALUE))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(panelList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addGap(1, 1, 1)
-                .addComponent(panelForm)
-                .addGap(60, 60, 60))
-            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addGap(0, 0, Short.MAX_VALUE)
-                    .addComponent(panelList, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGap(0, 0, Short.MAX_VALUE)))
-        );
+        add(panelList, java.awt.BorderLayout.PAGE_START);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnDetalleCombustibleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDetalleCombustibleActionPerformed
-//        DetallesCombustible dialog = new DetallesCombustible(new javax.swing.JFrame(), true);
-//        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-//            @Override
-//            public void windowClosing(java.awt.event.WindowEvent e) {
-//                dialog.setVisible(false);
-//            }
-//        });
-//        dialog.setVisible(true);
-//        //  cmbTipoCompustible.removeAllItems();
-//        cmbTipoCompustible.repaint();
+
         DetallesCombustible dialog = new DetallesCombustible(new javax.swing.JFrame(), true);
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -1048,9 +1176,10 @@ public class FleteView extends javax.swing.JPanel {
     }//GEN-LAST:event_btnDetalleCombustibleActionPerformed
 
     private void cmbTipoCompustibleItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_cmbTipoCompustibleItemStateChanged
+
         txtMonto.setText("");
         if (!txtMonto.getText().equals("")) {
-            Float precioxLitro = detalleCombustible.getPrecio();
+            Float precioxLitro = this.detalleCombustible.getPrecio();
             Float litros = Float.parseFloat(txtLitrosCargados.getText());
             txtMonto.setText(litros * precioxLitro + "");
         }
@@ -1058,6 +1187,7 @@ public class FleteView extends javax.swing.JPanel {
     }//GEN-LAST:event_cmbTipoCompustibleItemStateChanged
 
     private void txtLitrosCargadosKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtLitrosCargadosKeyReleased
+
         Float precioxLitro = detalleCombustible.getPrecio();
         Float litros = Float.parseFloat(txtLitrosCargados.getText());
         txtMonto.setText(String.format("%.2f", litros * precioxLitro));
@@ -1065,13 +1195,13 @@ public class FleteView extends javax.swing.JPanel {
     }//GEN-LAST:event_txtLitrosCargadosKeyReleased
 
     private void cmbVehiculoMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cmbVehiculoMouseEntered
-        cmbVehiculo.setToolTipText("pude buscar por modelo, marca y/o num de serie");
+        cmbVehiculo.setToolTipText("Puede buscar por modelo, marca o por numero de serie");
     }//GEN-LAST:event_cmbVehiculoMouseEntered
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void btnSearchVehicleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchVehicleActionPerformed
         getVehiculo();
         cmbTipoCompustible.setSelectedItem(vehiculo.getTipoCombustible());
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_btnSearchVehicleActionPerformed
 
     private void btnOperadorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOperadorActionPerformed
         searchOperador();
@@ -1085,9 +1215,7 @@ public class FleteView extends javax.swing.JPanel {
         if (btnSave.getText().endsWith("ardar")) {
             save();
             clearAll();
-            this.showForms(false, true);
-            // this.showForm(list);
-            this.showData(tblFlete);
+
             btnNew.setEnabled(true);
         } else if (btnSave.getText().startsWith("Actualizar")) {
             // update();
@@ -1153,17 +1281,29 @@ public class FleteView extends javax.swing.JPanel {
         if (tblFlete.getSelectedRow() >= 0) {
             int row = tblFlete.getSelectedRow();
             String status = String.valueOf(tblFlete.getValueAt(row, 9));
-            String dateStart = String.valueOf(tblFlete.getValueAt(row, 7));
-            String dateEnd = String.valueOf(tblFlete.getValueAt(row, 8));
+
+            String fechaInicial = String.valueOf(tblFlete.getValueAt(row, 7));
+            String fechaFinal = String.valueOf(tblFlete.getValueAt(row, 8));
+            LocalDateTime dateEnd = null, dateStart = null;
+
+            if (!fechaFinal.equals("null")) {
+
+                dateEnd = LocalDateTime.parse(fechaFinal);
+            }
+            if (!fechaInicial.equals("null")) {
+                dateStart = LocalDateTime.parse(fechaInicial);
+            }
+
             String kmInicial = String.valueOf(tblFlete.getValueAt(row, 10));
             String kmFinal = String.valueOf(tblFlete.getValueAt(row, 11));
-            int idFlete = Integer.valueOf(tblFlete.getValueAt(row, 0).toString());
-            int idAsig = Integer.valueOf(tblFlete.getValueAt(row, 12).toString());
-            int idWork = Integer.valueOf(tblFlete.getValueAt(row, 13).toString());
-            int idOperador = Integer.valueOf(tblFlete.getValueAt(row, 14).toString());
-            int idVehiculo = Integer.valueOf(tblFlete.getValueAt(row, 15).toString());
-            int idRecarga = Integer.valueOf(tblFlete.getValueAt(row, 25).toString());
-            dialog.dataFlete(idFlete, idAsig, idWork, idOperador, idVehiculo, idRecarga, status, dateStart, dateEnd, kmInicial, kmFinal);
+            int idFlete = Integer.parseInt(tblFlete.getValueAt(row, 0).toString());
+            int idAsig = Integer.parseInt(tblFlete.getValueAt(row, 12).toString());
+            int idWork = Integer.parseInt(tblFlete.getValueAt(row, 13).toString());
+            int idOperador = Integer.parseInt(tblFlete.getValueAt(row, 14).toString());
+            int idVehiculo = Integer.parseInt(tblFlete.getValueAt(row, 15).toString());
+            int idRecarga = Integer.parseInt(tblFlete.getValueAt(row, 24).toString());
+            dialog.dataFlete(idFlete, idAsig, idWork, idOperador,
+                    idVehiculo, idRecarga, status, dateStart, dateEnd, kmInicial, kmFinal);
             dialog.setVisible(true);
         }
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
@@ -1181,8 +1321,33 @@ public class FleteView extends javax.swing.JPanel {
 
     }//GEN-LAST:event_btnChangeStatusActionPerformed
 
+    private void txtLitrosCargadosKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtLitrosCargadosKeyTyped
+        Validaciones.soloRecibeNumeroConPunto(evt);
+    }//GEN-LAST:event_txtLitrosCargadosKeyTyped
+
+    private void Hora1MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Hora1MouseEntered
+        Hora1.setToolTipText("Horario de 12 h incluido AM / PM");
+    }//GEN-LAST:event_Hora1MouseEntered
+
+    private void Hora2MouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Hora2MouseEntered
+        Hora2.setToolTipText("Horario de 12 h incluido AM / PM");
+    }//GEN-LAST:event_Hora2MouseEntered
+
+    private void Hora1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Hora1MouseClicked
+
+        Hora1.updateUI();
+        Hora1.repaint();
+    }//GEN-LAST:event_Hora1MouseClicked
+
+    private void Hora2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_Hora2MouseClicked
+        Hora1.updateUI();
+        Hora1.repaint();
+    }//GEN-LAST:event_Hora2MouseClicked
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private com.utils.components.TimeChooser Hora1;
+    private com.utils.components.TimeChooser Hora2;
     private javax.swing.JPanel asignacion;
     private javax.swing.JButton btnCancel;
     private javax.swing.JButton btnChangeStatus;
@@ -1193,6 +1358,7 @@ public class FleteView extends javax.swing.JPanel {
     private javax.swing.JButton btnNew;
     private javax.swing.JButton btnOperador;
     private javax.swing.JButton btnSave;
+    private javax.swing.JButton btnSearchVehicle;
     private javax.swing.JComboBox<String> cmbGasolinera;
     private javax.swing.JComboBox<String> cmbLugarTrabajo;
     private javax.swing.JComboBox<String> cmbOperador;
@@ -1208,7 +1374,6 @@ public class FleteView extends javax.swing.JPanel {
     private javax.swing.JPanel detallesFlete;
     private com.toedter.calendar.JDateChooser endDate;
     private com.toedter.calendar.JDateChooser fechaRecarga;
-    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel10;
     private javax.swing.JLabel jLabel11;
@@ -1223,6 +1388,8 @@ public class FleteView extends javax.swing.JPanel {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel20;
     private javax.swing.JLabel jLabel21;
+    private javax.swing.JLabel jLabel22;
+    private javax.swing.JLabel jLabel23;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
@@ -1250,7 +1417,6 @@ public class FleteView extends javax.swing.JPanel {
     private javax.swing.JTable tblFlete;
     private javax.swing.ButtonGroup tipoPago;
     private javax.swing.JTextArea txtConcepto;
-    private javax.swing.JFormattedTextField txtHora;
     private javax.swing.JTextField txtKMFinal;
     private javax.swing.JTextField txtKMIncicial;
     private javax.swing.JTextField txtLitrosCargados;
@@ -1260,32 +1426,33 @@ public class FleteView extends javax.swing.JPanel {
     // End of variables declaration//GEN-END:variables
 
     private void searchTrabajador() {
-        cmbResponsableCarga.removeAllItems();
-        String res = (String) cmbResponsableCarga.getEditor().getItem();
-        List<Operador> ve = trabajadoresDAO.searchOperador(res);
+        String res = (String) this.cmbResponsableCarga.getEditor().getItem();
+        if (!res.isEmpty()) {
+            this.cmbResponsableCarga.removeAllItems();
 
-        for (Operador operador : ve) {
+            List<Operador> ve = trabajadoresDAO.searchOperador(res);
 
-            cmbResponsableCarga.addItem(operador.getNombre() + " " + operador.getApePaterno() + "");
+            for (Operador operadorl : ve) {
 
+                this.cmbResponsableCarga.addItem(operadorl.getId() + " " + operadorl.getNombre() + " " + operadorl.getApePaterno() + " " + operadorl.getApeMaterno());
+
+            }
+            this.cmbResponsableCarga.repaint();
+            cmbResponsableCarga.setPopupVisible(true);
+
+        } else {
+            this.cmbResponsableCarga.removeAllItems();
+            JOptionPane.showMessageDialog(null,
+                    "Introduzca los datos del operador nombre y/o apellido, de clic en buscar y seleccione los datos del operador.");
+            return;
         }
 
-        this.cmbResponsableCarga.setSelectedIndex(0);
-        this.cmbResponsableCarga.repaint();
-        cmbResponsableCarga.setPopupVisible(true);
-//        responsableCarga = new Operador();
-//        this.cmbResponsableCarga.addItemListener(new java.awt.event.ItemListener() {
-//            @Override
-//            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-//                responsableCarga.setId(ve.get(cmbResponsableCarga.getSelectedIndex()).getId());
-//            }
-//
-//        });
     }
 
     private void clearAll() {
         txtConcepto.setText("");
-        txtHora.setText("");
+        Hora1.setText("");
+        Hora2.setText("");
         txtKMFinal.setText("0");
         txtKMIncicial.setText("0");
         txtLitrosCargados.setText("0");
@@ -1294,7 +1461,7 @@ public class FleteView extends javax.swing.JPanel {
         startDate.setDate(null);
         endDate.setDate(null);
         //  cmbGasolinera.setSelectedIndex(0);
-        cmbLugarTrabajo.setSelectedIndex(-1);
+        //cmbLugarTrabajo.setSelectedIndex(-1);
         cmbOperador.removeAllItems();
         cmbRecibe.setSelectedIndex(0);
         //  cmbResponsableCarga.setSelectedIndex(0);
@@ -1303,6 +1470,7 @@ public class FleteView extends javax.swing.JPanel {
         cmbTipoCompustible.setSelectedIndex(0);
         cmbResponsableCarga.removeAllItems();
         cmbVehiculo.removeAllItems();
-
+        fechaRecarga.setDate(null);
+        cmbGasolinera.getEditor().setItem("");
     }
 }

@@ -29,6 +29,7 @@ public class Servicios extends javax.swing.JPanel {
     private VehiculosDAO vehiculosDAO;
     private Servicio servicio;
     private ServiciosDAO serviciosDAO;
+    private float KM_actual;
 
     public Servicios() {
         initComponents();
@@ -42,29 +43,51 @@ public class Servicios extends javax.swing.JPanel {
 
     private void getITems() {
         String res = (String) this.cmbSearch.getEditor().getItem();
-        cmbSearch.removeAllItems();
+        if (!res.isEmpty()) {
+            cmbSearch.removeAllItems();
 
-        List<Vehiculo> ve = vehiculosDAO.getByKey(res);
+            List<Vehiculo> ve = vehiculosDAO.getByKey(res);
 
-        for (Vehiculo vehiculol : ve) {
+            for (Vehiculo vehiculol : ve) {
 
-            cmbSearch.addItem(vehiculol.getId() + " - MARCA: " + vehiculol.getMarca() + " MODELO: "
-                    + vehiculol.getModelo() + " NUM_SERIE: " + vehiculol.getDescripcion());
+                cmbSearch.addItem(vehiculol.getId() + " - MARCA: " + vehiculol.getMarca() + " MODELO: "
+                        + vehiculol.getModelo() + " NUM_SERIE: " + vehiculol.getDescripcion());
 
+            }
+
+            vehiculo = new Vehiculo();
+            this.cmbSearch.repaint();
+            if (ve.size() == 1) {
+                cmbSearch.setSelectedIndex(0);
+
+                vehiculo.setId(ve.get(0).getId());
+                vehiculo.setTipoCombustible(ve.get(0).getTipoCombustible());
+                String kmactual = String.valueOf(ve.get(0).getKmActual());
+                KM_actual = Float.parseFloat(kmactual);
+                txtKM.setText(kmactual);
+            } else {
+                vehiculo.setId(ve.get(cmbSearch.getSelectedIndex()).getId());
+                vehiculo.setTipoCombustible(ve.get(cmbSearch.getSelectedIndex()).getTipoCombustible());
+                txtKM.setText(String.valueOf(ve.get(cmbSearch.getSelectedIndex()).getKmActual()));
+            }
+
+            cmbSearch.setPopupVisible(true);
+
+            cmbSearch.addItemListener(new java.awt.event.ItemListener() {
+                @Override
+                public void itemStateChanged(java.awt.event.ItemEvent evt) {
+
+                    vehiculo.setId(ve.get(cmbSearch.getSelectedIndex()).getId());
+                    vehiculo.setTipoCombustible(ve.get(cmbSearch.getSelectedIndex()).getTipoCombustible());
+                    txtKM.setText(String.valueOf(ve.get(cmbSearch.getSelectedIndex()).getKmActual()));
+                }
+            }
+            );
+        } else {
+            JOptionPane.showMessageDialog(null, "Introduzca los datos del vehiculo, puede ser el modelo y/o marca. "
+                    + "Una vez introducido de clic en el boton  buscar para buscar el ID del vehiculo");
         }
 
-        cmbSearch.repaint();
-        cmbSearch.setPopupVisible(true);
-
-//        vehiculo = new Vehiculo();
-//        vehiculo.setId(ve.get(0).getId());
-//        cmbSearch.addItemListener(new java.awt.event.ItemListener() {
-//            public void itemStateChanged(java.awt.event.ItemEvent evt) {
-//
-//                vehiculo.setId(ve.get(cmbSearch.getSelectedIndex()).getId());
-//
-//            }
-//        });
     }
 
     public void showForms(boolean showForm, boolean showList) {
@@ -77,7 +100,7 @@ public class Servicios extends javax.swing.JPanel {
     }
 
     private void validacionForm() {
-        Validaciones.dateNoSeleted(txtFechaServicio);
+        Validaciones.dateNoSeleted(txtFechaServicio,"Fecha servicio");
         if (!rbEfectivo.isSelected() && !rbTransferencia.isSelected()) {
             JOptionPane.showMessageDialog(null, "METODO DE PAAGO NO SELECCIONADO");
             return;
@@ -113,7 +136,7 @@ public class Servicios extends javax.swing.JPanel {
         servicio.setDescripcion(txtDescripcion.getText());
         servicio.setObservaciones(txtObservacion.getText());
         if (!bgMetodoPago.getSelection().isSelected()) {
-            JOptionPane.showMessageDialog(null, "No ha seleccionado el método de pago ","Aviso",JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(null, "No ha seleccionado el método de pago ", "Aviso", JOptionPane.ERROR_MESSAGE);
             return;
 
         } else if (rbTransferencia.isSelected()) {
@@ -335,7 +358,9 @@ public class Servicios extends javax.swing.JPanel {
         jLabel11 = new javax.swing.JLabel();
         txtFechaServicio = new com.toedter.calendar.JDateChooser();
 
-        setLayout(new java.awt.GridBagLayout());
+        setLayout(new java.awt.BorderLayout());
+
+        panelList.setLayout(new java.awt.GridBagLayout());
 
         panelOptions.setBorder(javax.swing.BorderFactory.createTitledBorder("Opciones"));
         panelOptions.setLayout(new java.awt.GridLayout(4, 0, 0, 5));
@@ -372,6 +397,14 @@ public class Servicios extends javax.swing.JPanel {
         });
         panelOptions.add(btnExportar);
 
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 3;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.ipady = 28;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(12, 3, 0, 0);
+        panelList.add(panelOptions, gridBagConstraints);
+
         tblAllServices.setAutoCreateRowSorter(true);
         tblAllServices.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -387,7 +420,27 @@ public class Servicios extends javax.swing.JPanel {
         tblAllServices.setPreferredSize(null);
         jScrollPane4.setViewportView(tblAllServices);
 
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 2;
+        gridBagConstraints.gridwidth = 3;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.BOTH;
+        gridBagConstraints.ipadx = 1109;
+        gridBagConstraints.ipady = 445;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.weightx = 1.0;
+        gridBagConstraints.weighty = 1.0;
+        gridBagConstraints.insets = new java.awt.Insets(12, 22, 0, 0);
+        panelList.add(jScrollPane4, gridBagConstraints);
+
         jLabel13.setText("Ultimos servicios registrados");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
+        gridBagConstraints.insets = new java.awt.Insets(17, 201, 0, 0);
+        panelList.add(jLabel13, gridBagConstraints);
 
         txtSearch.setPlaceholder("Buscar ...");
         txtSearch.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -395,47 +448,19 @@ public class Servicios extends javax.swing.JPanel {
                 txtSearchKeyTyped(evt);
             }
         });
-
-        javax.swing.GroupLayout panelListLayout = new javax.swing.GroupLayout(panelList);
-        panelList.setLayout(panelListLayout);
-        panelListLayout.setHorizontalGroup(
-            panelListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListLayout.createSequentialGroup()
-                .addGap(18, 18, 18)
-                .addGroup(panelListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListLayout.createSequentialGroup()
-                        .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 281, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jLabel13)
-                        .addGap(357, 357, 357))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, panelListLayout.createSequentialGroup()
-                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 1125, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(3, 3, 3)))
-                .addComponent(panelOptions, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(25, 25, 25))
-        );
-        panelListLayout.setVerticalGroup(
-            panelListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelListLayout.createSequentialGroup()
-                .addGap(17, 17, 17)
-                .addGroup(panelListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(panelOptions, javax.swing.GroupLayout.PREFERRED_SIZE, 169, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(panelListLayout.createSequentialGroup()
-                        .addGroup(panelListLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jLabel13)
-                            .addComponent(txtSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 465, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(8, Short.MAX_VALUE))
-        );
-
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
-        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
-        gridBagConstraints.ipady = 1;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.ipadx = 365;
+        gridBagConstraints.ipady = 5;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        add(panelList, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(17, 22, 0, 0);
+        panelList.add(txtSearch, gridBagConstraints);
+
+        add(panelList, java.awt.BorderLayout.CENTER);
+
+        panelForm.setLayout(new java.awt.GridBagLayout());
 
         btnSearch.setText("Buscar");
         btnSearch.addActionListener(new java.awt.event.ActionListener() {
@@ -577,25 +602,22 @@ public class Servicios extends javax.swing.JPanel {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 340, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(57, 57, 57))
+                            .addComponent(jPanel4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 350, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGap(8, 8, 8)
+                        .addComponent(jLabel4))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGap(8, 8, 8)
-                                .addComponent(jLabel4))
-                            .addGroup(jPanel2Layout.createSequentialGroup()
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(txtCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(jLabel3))
-                                .addGap(61, 61, 61)
-                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(jLabel5)
-                                    .addComponent(txtPrecio, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(txtCantidad, javax.swing.GroupLayout.PREFERRED_SIZE, 122, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3))
+                        .addGap(61, 61, 61)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel5)
+                            .addComponent(txtPrecio, javax.swing.GroupLayout.PREFERRED_SIZE, 167, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel9)
                     .addGroup(jPanel2Layout.createSequentialGroup()
@@ -682,7 +704,7 @@ public class Servicios extends javax.swing.JPanel {
             }
         });
 
-        jLabel11.setText("Vehivulo");
+        jLabel11.setText("Vehiculo");
 
         txtFechaServicio.setDateFormatString("dd/MM/yyyy");
         txtFechaServicio.setName(""); // NOI18N
@@ -736,27 +758,14 @@ public class Servicios extends javax.swing.JPanel {
                 .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
-        javax.swing.GroupLayout panelFormLayout = new javax.swing.GroupLayout(panelForm);
-        panelForm.setLayout(panelFormLayout);
-        panelFormLayout.setHorizontalGroup(
-            panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelFormLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        panelFormLayout.setVerticalGroup(
-            panelFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(panelFormLayout.createSequentialGroup()
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-        );
-
         gridBagConstraints = new java.awt.GridBagConstraints();
         gridBagConstraints.gridx = 0;
         gridBagConstraints.gridy = 0;
         gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        add(panelForm, gridBagConstraints);
+        gridBagConstraints.insets = new java.awt.Insets(6, 6, 0, 219);
+        panelForm.add(jPanel1, gridBagConstraints);
+
+        add(panelForm, java.awt.BorderLayout.PAGE_START);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed

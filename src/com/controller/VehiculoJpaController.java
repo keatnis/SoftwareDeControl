@@ -149,7 +149,7 @@ public class VehiculoJpaController implements Serializable {
                 + "OR v.modelo LIKE '%" + key + "%' OR v.num_serie LIKE '%" + key + "%'";
         EntityManager em = getEntityManager();
         List<Vehiculo> list = em.createNativeQuery(sqlString, Vehiculo.class)
-                .setParameter("marca", key).getResultList();
+               .getResultList();
         return list;
 
     }

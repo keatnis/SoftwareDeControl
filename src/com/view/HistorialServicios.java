@@ -9,8 +9,6 @@ import com.utils.Filter;
 import com.utils.table.RenderTable;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -23,7 +21,6 @@ public class HistorialServicios extends javax.swing.JPanel {
 
     private VehiculosDAO vehiculosDAO;
     private final ServiciosDAO serviciosDAO;
-    private static Integer ID_VEHICULO = null;
 
     public HistorialServicios() {
         initComponents();
@@ -33,20 +30,27 @@ public class HistorialServicios extends javax.swing.JPanel {
 
     private void getITems() {
         String res = (String) this.cmbSearch.getEditor().getItem();
-        cmbSearch.removeAllItems();
-        //   cmbSearch.setPopupVisible(true);
-        ID_VEHICULO = null;
-        List<Vehiculo> ve = vehiculosDAO.getByKey(res);
+        if (!res.isEmpty()) {
+            cmbSearch.removeAllItems();
 
-        for (Vehiculo vehiculol : ve) {
+           
+            List<Vehiculo> ve = vehiculosDAO.getByKey(res);
 
-            cmbSearch.addItem(vehiculol.getId() + " - MARCA: " + vehiculol.getMarca() + " MODELO: "
-                    + vehiculol.getModelo() + " NUM_SERIE: " + vehiculol.getDescripcion());
+            for (Vehiculo vehiculol : ve) {
 
+                cmbSearch.addItem(vehiculol.getId() + " MARCA: " + vehiculol.getMarca() + " MODELO: "
+                        + vehiculol.getModelo() + " NUM_SERIE: " + vehiculol.getDescripcion());
+
+            }
+
+            cmbSearch.repaint();
+            cmbSearch.setPopupVisible(true);
+        } else {
+            this.cmbSearch.removeAllItems();
+            JOptionPane.showMessageDialog(null,
+                    "Introduzca los datos del vehiculo marca o modelo, luego de clic en el boton buscarr");
+            return;
         }
-        
-        cmbSearch.repaint();
-        cmbSearch.setPopupVisible(true);
 
     }
 
@@ -76,9 +80,9 @@ public class HistorialServicios extends javax.swing.JPanel {
 
             model.addRow(new Object[]{
                 servicio.getId(),
-                servicio.getVehiculo().getId() + "- MARCA: "
+                servicio.getVehiculo().getId() + " MARCA: "
                 + servicio.getVehiculo().getMarca() + "MODELO: "
-                + servicio.getVehiculo().getModelo() + " NUM.SERIE"
+                + servicio.getVehiculo().getModelo() + " NUM.SERIE "
                 + servicio.getVehiculo().getNumSerie(),
                 servicio.getVehiculo().getType(),
                 // servicio.getVehiculo().getDescripcion(),
@@ -114,9 +118,8 @@ public class HistorialServicios extends javax.swing.JPanel {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        java.awt.GridBagConstraints gridBagConstraints;
 
-        jPanel1 = new javax.swing.JPanel();
+        root = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblServices = new javax.swing.JTable();
         btnSearch = new javax.swing.JButton();
@@ -125,7 +128,7 @@ public class HistorialServicios extends javax.swing.JPanel {
         cmbSearch = new javax.swing.JComboBox<>();
         btnExportar = new javax.swing.JButton();
 
-        setLayout(new java.awt.GridBagLayout());
+        setLayout(new java.awt.BorderLayout());
 
         tblServices.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -138,6 +141,7 @@ public class HistorialServicios extends javax.swing.JPanel {
                 "Title 1", "Title 2", "Title 3", "Title 4"
             }
         ));
+        tblServices.setShowGrid(true);
         jScrollPane1.setViewportView(tblServices);
 
         btnSearch.setText("Buscar");
@@ -155,7 +159,7 @@ public class HistorialServicios extends javax.swing.JPanel {
         });
 
         jLabel1.setFont(new java.awt.Font("Cantarell", 0, 12)); // NOI18N
-        jLabel1.setText("Burcar vehiculo por marca, modelo o num. serie.");
+        jLabel1.setText("Buscar vehiculo por marca, modelo o num. serie.");
 
         cmbSearch.setEditable(true);
 
@@ -166,57 +170,52 @@ public class HistorialServicios extends javax.swing.JPanel {
             }
         });
 
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(894, Short.MAX_VALUE)
+        javax.swing.GroupLayout rootLayout = new javax.swing.GroupLayout(root);
+        root.setLayout(rootLayout);
+        rootLayout.setHorizontalGroup(
+            rootLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, rootLayout.createSequentialGroup()
+                .addGap(20, 20, 20)
+                .addComponent(cmbSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 402, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(32, 32, 32)
+                .addComponent(btnSearch)
+                .addGap(30, 30, 30)
+                .addComponent(btnShow)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 388, Short.MAX_VALUE)
                 .addComponent(btnExportar)
-                .addGap(52, 52, 52))
-            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel1Layout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                        .addGroup(jPanel1Layout.createSequentialGroup()
-                            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                    .addComponent(cmbSearch, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(btnSearch))
-                                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                                    .addComponent(jLabel1)
-                                    .addGap(161, 161, 161)))
-                            .addGap(30, 30, 30)
-                            .addComponent(btnShow))
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 1017, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                .addGap(33, 33, 33))
+            .addGroup(rootLayout.createSequentialGroup()
+                .addGap(75, 75, 75)
+                .addComponent(jLabel1)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(rootLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, rootLayout.createSequentialGroup()
+                    .addGap(21, 21, 21)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 1219, Short.MAX_VALUE)
+                    .addContainerGap()))
         );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(0, 462, Short.MAX_VALUE)
-                .addComponent(btnExportar))
-            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addGroup(jPanel1Layout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(jLabel1)
-                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                        .addComponent(cmbSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(btnSearch)
-                        .addComponent(btnShow))
-                    .addGap(18, 18, 18)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 386, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(31, Short.MAX_VALUE)))
+        rootLayout.setVerticalGroup(
+            rootLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(rootLayout.createSequentialGroup()
+                .addComponent(jLabel1)
+                .addGap(5, 5, 5)
+                .addGroup(rootLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(cmbSearch, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSearch)
+                    .addGroup(rootLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(btnShow)
+                        .addComponent(btnExportar)))
+                .addGap(20, 20, 20))
+            .addGroup(rootLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(rootLayout.createSequentialGroup()
+                    .addGap(54, 54, 54)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap(25, Short.MAX_VALUE)))
         );
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.anchor = java.awt.GridBagConstraints.NORTHWEST;
-        gridBagConstraints.insets = new java.awt.Insets(0, 4, 0, 5);
-        add(jPanel1, gridBagConstraints);
+        jScrollPane1.getAccessibleContext().setAccessibleParent(null);
+
+        add(root, java.awt.BorderLayout.PAGE_START);
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
@@ -242,8 +241,8 @@ public class HistorialServicios extends javax.swing.JPanel {
     private javax.swing.JButton btnShow;
     private javax.swing.JComboBox<String> cmbSearch;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel root;
     private javax.swing.JTable tblServices;
     // End of variables declaration//GEN-END:variables
 }

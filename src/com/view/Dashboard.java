@@ -33,10 +33,10 @@ public class Dashboard extends javax.swing.JPanel {
        Object[] dashboardGets =  dashboardDAO.getCountDashboard();
         String[] count = Arrays.toString(dashboardGets).split(", ");
 
-        cardFletes.setData(new ModelCard(count[3].replace("]", ""), "Fletes del Mes", "/com/utils/icon/check.png"));
+        cardFletes.setData(new ModelCard(count[3].replace("]", ""), "Fletes del Mes", "/com/utils/icon/deliverytruck.png"));
         cardOperadores.setData(new ModelCard(count[2], "Total Trabajadores", "/com/utils/icon/worker.png"));
         cardVehiculos.setData(new ModelCard(count[1], "Total Vehiculos", "/com/utils/icon/truck.png"));
-        cardRecargas.setData(new ModelCard(count[0].substring(1), "Recargas del mes", "/com/utils/icon/gas-station.png"));
+        cardRecargas.setData(new ModelCard(count[0].substring(1), "Recargas del mes", "/com/utils/icon/gas.png"));
 
         // mostras fletes activos
         this.showFletesData(tblFletes);
@@ -99,7 +99,7 @@ public class Dashboard extends javax.swing.JPanel {
         Filter.removeAllRows(table);
         Object[] titles = new Object[]{
             "NUM. SERIE", "MARCA", "MODELO", "TIPO", "DESCRIPCION", "KM",
-            "FECHA PROX. SERVICIO"};
+            "FECHA SERVICIO"};
         /*coloco el nombre de las  columnas de la tabla USER a el modelo */
         DefaultTableModel model = new DefaultTableModel(null, titles) {
 

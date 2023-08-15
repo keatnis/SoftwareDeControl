@@ -10,10 +10,11 @@ public class MainSystem extends javax.swing.JFrame {
 
     private Login splashFrame;
     private User user;
+
     public MainSystem() {
 
         initComponents();
-
+        this.getAccessibleContext();
     }
 
     MainSystem(User user, Login splashFrame) {
@@ -25,28 +26,31 @@ public class MainSystem extends javax.swing.JFrame {
         this.showForm(new Dashboard(), "Dashboard");
         setProgress(65, "Cargando interfaces");
         // this.setShape(new RoundRectangle2D.Double(0, 0, getWidth(),getHeight(), 20, 20));
-        this.user=user;
-        lbUser.setText(user.getRole()+" :" + user.getNombre());
+        this.user = user;
+        lbUser.setText(user.getRole() + " :" + user.getNombre());
         this.repaint();
 
         setProgress(65, "Cargando interfaces");
         setProgress(100, "Carga completa");
         accesByTypeUSer();
         this.getAccessibleContext();
-//     initn();
+        
 
     }
-    private void accesByTypeUSer(){
+
+    private void accesByTypeUSer() {
         if (user.getRole().equals("Admin")) {
-                this.getAccessibleContext();
-        }else{
+            this.getAccessibleContext();
+        } else {
             /*
             lOS MODULOS NO ACCESIBLES PARA EL USUARIO NORMAL
-            */
+             */
             menuUsuario.setEnabled(false);
+            
             this.getAccessibleContext();
         }
     }
+
     private void setProgress(int percent, String information) {
         splashFrame.getlbprogress().setText(information);
         splashFrame.getProgressBar().setValue(percent);
@@ -334,7 +338,7 @@ public class MainSystem extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(panelEnc, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 1105, Short.MAX_VALUE)
+                    .addComponent(panelEnc, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 1305, Short.MAX_VALUE)
                     .addComponent(panelBody, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addGap(0, 0, 0))
         );
@@ -347,6 +351,8 @@ public class MainSystem extends javax.swing.JFrame {
                 .addComponent(panelBody, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
+
+        getAccessibleContext().setAccessibleDescription("");
 
         pack();
         setLocationRelativeTo(null);
@@ -363,7 +369,7 @@ public class MainSystem extends javax.swing.JFrame {
     }//GEN-LAST:event_DasboardMouseClicked
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        this.showForm(new TrabajadoresView(), "Menú > Trabajadores");
+        this.showForm(new TrabajadoresView(), "Menú: Trabajadores");
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void CerrarSesionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CerrarSesionActionPerformed
@@ -411,11 +417,11 @@ public class MainSystem extends javax.swing.JFrame {
     }//GEN-LAST:event_programarServicioActionPerformed
 
     private void historialServicioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_historialServicioActionPerformed
-        this.showForm(new HistorialServicios(), "Menu: Servicios > Historial de servicios ");
+        this.showForm(new HistorialServicios(), "Menu: Servicios / Historial de servicios ");
     }//GEN-LAST:event_historialServicioActionPerformed
 
     private void menuWorkplaceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuWorkplaceActionPerformed
-        this.showForm(new LugarTrabajo(), "Menú : Flete > Lugar de Trabajo");
+        this.showForm(new LugarTrabajo(), "Menú : Flete / Lugar de Trabajo");
     }//GEN-LAST:event_menuWorkplaceActionPerformed
 
     private void recargaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_recargaActionPerformed
@@ -430,11 +436,11 @@ public class MainSystem extends javax.swing.JFrame {
     }//GEN-LAST:event_recargaActionPerformed
 
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
-        this.showForm(new FleteView(), "Flete > Registro de flete");
+        this.showForm(new FleteView(), "Menu: Flete / Registro de flete");
     }//GEN-LAST:event_jMenuItem5ActionPerformed
 
     private void menuCalculoNominaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCalculoNominaActionPerformed
-        this.showForm(new CalcularNomina(), "Nomina");
+        this.showForm(new CalcularNomina(), "Nómina");
     }//GEN-LAST:event_menuCalculoNominaActionPerformed
 
     private void MenuBarMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_MenuBarMouseClicked
@@ -446,7 +452,7 @@ public class MainSystem extends javax.swing.JFrame {
         dialog.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
-            dialog.dispose();
+                dialog.dispose();
             }
         });
         dialog.setVisible(true);

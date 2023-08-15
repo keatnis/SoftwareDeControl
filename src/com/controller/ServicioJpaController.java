@@ -9,7 +9,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.EntityNotFoundException;
-import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -24,7 +23,8 @@ public class ServicioJpaController implements Serializable {
     public ServicioJpaController() {
         this.emf = emf;
     }
-    private EntityManagerFactory emf =  Persistence.createEntityManagerFactory("ControlSystemPU");
+    private EntityManagerFactory emf =  
+            Persistence.createEntityManagerFactory("ControlSystemPU");
 
     public EntityManager getEntityManager() {
         return emf.createEntityManager();

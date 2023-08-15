@@ -2,9 +2,7 @@ package com.model;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 import javax.persistence.Basic;
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,7 +12,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -26,15 +23,7 @@ import javax.persistence.TemporalType;
 @Entity
 @Table(name = "NOMINA")
 @NamedQueries({
-    @NamedQuery(name = "Nomina.findAll", query = "SELECT n FROM Nomina n"),
-    @NamedQuery(name = "Nomina.findById", query = "SELECT n FROM Nomina n WHERE n.id = :id ORDER BY n.fechaPago DESC"),
-    @NamedQuery(name = "Nomina.findByPrestamos", query = "SELECT n FROM Nomina n WHERE n.prestamos = :prestamos"), //    @NamedQuery(name = "Nomina.findByDiasLaborados", query = "SELECT n FROM Nomina n WHERE n.diasLaborados = :diasLaborados"),
-//    @NamedQuery(name = "Nomina.findBySueldoDiario", query = "SELECT n FROM Nomina n WHERE n.sueldoDiario = :sueldoDiario"),
-//    @NamedQuery(name = "Nomina.findByDescuentos", query = "SELECT n FROM Nomina n WHERE n.descuentos = :descuentos"),
-//    @NamedQuery(name = "Nomina.findBySueldoNeto", query = "SELECT n FROM Nomina n WHERE n.sueldoNeto = :sueldoNeto"),
-//    @NamedQuery(name = "Nomina.findByObservaciones", query = "SELECT n FROM Nomina n WHERE n.observaciones = :observaciones"),
-//    @NamedQuery(name = "Nomina.findByPeriodo", query = "SELECT n FROM Nomina n WHERE n.periodo = :periodo")
-})
+    @NamedQuery(name = "Nomina.findAll", query = "SELECT n FROM Nomina n"),})
 public class Nomina implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -61,8 +50,12 @@ public class Nomina implements Serializable {
     @Column(name = "observaciones")
     private String observaciones;
     @Basic(optional = false)
-    @Column(name = "periodo")
-    private String periodo;
+    @Temporal(TemporalType.DATE)
+    @Column(name = "fecha_inicio")
+    private Date fechaInicio;
+    @Temporal(TemporalType.DATE)
+    @Column(name = "fecha_fin")
+    private Date fechaFin;
     @Basic(optional = false)
     @Column(name = "fecha_pago")
     @Temporal(TemporalType.DATE)
@@ -74,9 +67,7 @@ public class Nomina implements Serializable {
     public Nomina() {
     }
 
-
-
-    public Nomina(Integer id, int diasLaborados, float sueldoDiario, Float prestamos, Float descuentos, float sueldoNeto, String observaciones, String periodo, Date fechaPago, Operador operador) {
+    public Nomina(Integer id, int diasLaborados, float sueldoDiario, Float prestamos, Float descuentos, float sueldoNeto, String observaciones, Date fechaInicio, Date fechaFin, Date fechaPago, Operador operador) {
         this.id = id;
         this.diasLaborados = diasLaborados;
         this.sueldoDiario = sueldoDiario;
@@ -84,11 +75,29 @@ public class Nomina implements Serializable {
         this.descuentos = descuentos;
         this.sueldoNeto = sueldoNeto;
         this.observaciones = observaciones;
-        this.periodo = periodo;
+        this.fechaInicio = fechaInicio;
+        this.fechaFin = fechaFin;
         this.fechaPago = fechaPago;
         this.operador = operador;
     }
 
+    public Date getFechaInicio() {
+        return fechaInicio;
+    }
+
+    public void setFechaInicio(Date fechaInicio) {
+        this.fechaInicio = fechaInicio;
+    }
+
+    public Date getFechaFin() {
+        return fechaFin;
+    }
+
+    public void setFechaFin(Date fechaFin) {
+        this.fechaFin = fechaFin;
+    }
+
+   
     public Operador getOperador() {
         return operador;
     }
@@ -166,13 +175,6 @@ public class Nomina implements Serializable {
         this.observaciones = observaciones;
     }
 
-    public String getPeriodo() {
-        return periodo;
-    }
-
-    public void setPeriodo(String periodo) {
-        this.periodo = periodo;
-    }
 
     @Override
     public int hashCode() {

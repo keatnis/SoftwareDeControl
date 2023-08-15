@@ -4,6 +4,8 @@ import com.toedter.calendar.JDateChooser;
 import java.awt.event.KeyEvent;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import javax.swing.JComboBox;
 import javax.swing.JOptionPane;
@@ -109,22 +111,74 @@ public class Validaciones {
             System.out.println("aun no es el min.");
         }
     }
-    public static void dateNoSeleted (JDateChooser dateChooser){
-        if (dateChooser.getDate()  == null || dateChooser.getDate().equals("")) {
-            JOptionPane.showMessageDialog(null,dateChooser.getName()+"Fecha no seleccionada");
+
+    public static void dateNoSeleted(JDateChooser dateChooser, String nombreComponente) {
+
+        if (dateChooser.getDate() == null || dateChooser.getDate().equals("")) {
+            dateChooser.setDate(null);
+            JOptionPane.showMessageDialog(null, nombreComponente + " no seleccionada ");
         }
     }
-           
+
+    public static void dateNoSeletedWhithMessage(JDateChooser dateChooser, String msj) {
+        if (dateChooser.getDate() == null || dateChooser.getDate().equals("")) {
+            JOptionPane.showMessageDialog(null, msj);
+        }
+    }
 
     public static Date returnDate(String dateString) {
         Date date = null;
         try {
-            date = new SimpleDateFormat("yyyy-MM-dd")
-                    .parse(dateString);
-
+            if (!dateString.equals("null") || dateString != null) {
+                date = new SimpleDateFormat("yyyy-MM-dd")
+                        .parse(dateString);
+            }
         } catch (ParseException ex) {
-            JOptionPane.showMessageDialog(null, ex.getMessage());
+             JOptionPane.showMessageDialog(null, ex.getMessage());
         }
         return date;
+       
+    }
+
+    public static LocalDateTime dateTimeReturn(JDateChooser date, String time, String nameTime) {
+        /*
+        DATE: 2022-02-01 TIME: 24:00
+         */
+        SimpleDateFormat formatofecha = new SimpleDateFormat("yyyy-MM-dd");
+        //     fechaFinal= formatofecha.format(endDate.getDate());
+        LocalDateTime localDateTime = null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+        String strHora = null;
+
+        if (date.getDate() != null && time != null) {
+            strHora = formatofecha.format(date.getDate()) + " " + time;
+            localDateTime = LocalDateTime.parse(strHora, formatter);
+        } else if (date.getDate() != null && time == null) {
+
+            int opcion = JOptionPane.showConfirmDialog(null, 
+                    "no se establecio la hora " + nameTime + "\n Desea establecerlo?  .", "Confirmacion", JOptionPane.YES_NO_OPTION);
+            if (opcion == 0) {
+                strHora = formatofecha.format(date.getDate()) + " ";
+            } else {
+                strHora = formatofecha.format(date.getDate()) + " " + "00:00";
+                localDateTime = LocalDateTime.parse(strHora, formatter);
+            }
+
+        } else if (date.getDate() == null && time != null) {
+            strHora = " " + time;
+            JOptionPane.showConfirmDialog(null, 
+                    "no se establecio la fecha de " + nameTime + ", Desea establecerlo? \n .", "Confirmacion", JOptionPane.YES_NO_OPTION);
+            localDateTime = LocalDateTime.parse(strHora, formatter);
+        } else {
+            localDateTime = null;
+        }
+        return localDateTime;
+    }
+
+    public static void cmbEditorNoSelected(JComboBox comboBox, String msj) {
+
+        if (comboBox.getEditor().getItem().toString().isEmpty() || comboBox.getSelectedItem() == null) {
+            JOptionPane.showMessageDialog(null, msj);
+        }
     }
 }

@@ -18,36 +18,30 @@ import javax.swing.JOptionPane;
 public class FleteDAO {
 
     private EntityManagerFactory emf = Persistence.createEntityManagerFactory("ControlSystemPU");
-    private AsignacionUnidad asignacionUnidad;
-    private Flete flete;
-    private RecargaCombustible recargaCombustible;
 
     private AsignacionUnidadJpaController asignacionUnidadJpaController;
     private FleteJpaController fleteJpaController;
     private RecargaCombustibleJpaController recargaCombustibleJpaController;
-
+  
     public FleteDAO() {
         this.asignacionUnidadJpaController = new AsignacionUnidadJpaController(emf);
         this.fleteJpaController = new FleteJpaController(emf);
         this.recargaCombustibleJpaController = new RecargaCombustibleJpaController(emf);
+      
     }
 
     public void saveFlete(Flete flete, RecargaCombustible recargaCombustible, AsignacionUnidad asignacionUnidad) {
-
         try {
 
             flete.setLugarTrabajo(flete.getLugarTrabajo());
-
             asignacionUnidadJpaController.create(asignacionUnidad);
-
             flete.setAsignacionUnidad(asignacionUnidad);
             // recargaCombustible.setAsignacionUnidad(asignacionUnidad);
-
+            
             recargaCombustibleJpaController.create(recargaCombustible);
             flete.setRecargaCombustible(recargaCombustible);
             fleteJpaController.create(flete);
-            // System.out.println("lugar trabaho s" + asignacionUnidad.getOperador().getId());
-            JOptionPane.showMessageDialog(null, "Datos del flete registrado correctamente");
+                  JOptionPane.showMessageDialog(null, "Datos del flete registrado correctamente");
         } catch (Exception e) {
             System.out.println(e);
         }
